@@ -74,6 +74,7 @@
     <script>
         // ==========================================
         // 1. データ定義（百人一首 全100首）
+        // ※英単語カルタにする場合は、kamiに英語、shimoに日本語を入れて応用できます。
         // ==========================================
         const POEMS = [
             { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの" },
@@ -214,6 +215,7 @@
         const app = {
             state: {
                 currentView: 'home',
+                practiceRange: '1-100', // 練習モードの範囲指定
                 stats: {
                     memorized: [],
                     practiceScores: 0,
@@ -250,7 +252,7 @@
             render() {
                 const root = document.getElementById('app');
                 let headerHTML = '';
-                const titles = { 'learn':'覚える（百首一覧）', 'practice':'練習モード', 'battleMenu':'対戦メニュー', 'battleCpu':'CPU対戦', 'battleLocal':'2人対戦' };
+                const titles = { 'learn':'覚える（百首一覧）', 'practiceMenu':'練習設定', 'practice':'練習モード', 'battleMenu':'対戦メニュー', 'battleCpu':'CPU対戦', 'battleLocal':'2人対戦' };
                 if(this.state.currentView !== 'home') {
                     headerHTML = `
                         <header class="bg-stone-800 text-stone-100 p-4 shadow-md flex items-center justify-between sticky top-0 z-50 flex-shrink-0 border-b border-stone-600">
@@ -312,7 +314,7 @@
                                         <p class="text-stone-500 text-sm text-center font-sans">畳の上に並んだ百首の札を<br>直感的にめくって暗記</p>
                                     </button>
                                     
-                                    <button onclick="app.startPractice()" class="bg-white p-8 rounded-lg shadow hover:shadow-lg transition-all border border-stone-200 flex flex-col items-center group relative overflow-hidden">
+                                    <button onclick="app.goTo('practiceMenu')" class="bg-white p-8 rounded-lg shadow hover:shadow-lg transition-all border border-stone-200 flex flex-col items-center group relative overflow-hidden">
                                         <div class="absolute -bottom-4 -right-4 text-7xl text-orange-50 opacity-50 group-hover:scale-110 transition-transform"><i class="fa-solid fa-scroll"></i></div>
                                         <div class="text-orange-700 mb-4 text-4xl"><i class="fa-solid fa-scroll"></i></div>
                                         <h2 class="text-2xl font-bold mb-2 tracking-widest">練習する</h2>
@@ -332,7 +334,7 @@
                     `;
                 },
 
-                // ① 覚えるモード（一括グリッド＆フリック）
+                // ① 覚えるモード
                 learn() {
                     const s = app.state.learn;
                     const flipped = s.flippedCards;
@@ -379,7 +381,36 @@
                     `;
                 },
 
-                // ② 練習モード
+                // ②-A 練習メニュー（範囲設定）
+                practiceMenu() {
+                    return `
+                        <div class="flex-1 wagara-bg flex items-center justify-center p-6">
+                            <div class="bg-white p-8 rounded shadow text-center border-t-4 border-orange-600 max-w-md w-full">
+                                <i class="fa-solid fa-scroll text-5xl text-orange-700 mb-4"></i>
+                                <h2 class="text-2xl font-bold mb-6 font-serif tracking-widest">練習範囲の設定</h2>
+                                <div class="mb-6 text-left">
+                                    <label class="block text-sm font-bold text-stone-600 mb-2 font-sans">出題範囲</label>
+                                    <select class="w-full p-3 border border-stone-300 rounded font-bold font-sans focus:outline-none focus:border-orange-500" onchange="app.state.practiceRange = this.value">
+                                        <option value="1-100" ${app.state.practiceRange === '1-100' ? 'selected' : ''}>全首（1〜100）</option>
+                                        <option value="1-10" ${app.state.practiceRange === '1-10' ? 'selected' : ''}>1〜10首</option>
+                                        <option value="11-20" ${app.state.practiceRange === '11-20' ? 'selected' : ''}>11〜20首</option>
+                                        <option value="21-30" ${app.state.practiceRange === '21-30' ? 'selected' : ''}>21〜30首</option>
+                                        <option value="31-40" ${app.state.practiceRange === '31-40' ? 'selected' : ''}>31〜40首</option>
+                                        <option value="41-50" ${app.state.practiceRange === '41-50' ? 'selected' : ''}>41〜50首</option>
+                                        <option value="51-60" ${app.state.practiceRange === '51-60' ? 'selected' : ''}>51〜60首</option>
+                                        <option value="61-70" ${app.state.practiceRange === '61-70' ? 'selected' : ''}>61〜70首</option>
+                                        <option value="71-80" ${app.state.practiceRange === '71-80' ? 'selected' : ''}>71〜80首</option>
+                                        <option value="81-90" ${app.state.practiceRange === '81-90' ? 'selected' : ''}>81〜90首</option>
+                                        <option value="91-100" ${app.state.practiceRange === '91-100' ? 'selected' : ''}>91〜100首</option>
+                                    </select>
+                                </div>
+                                <button onclick="app.startPractice()" class="bg-orange-700 text-white px-8 py-3 rounded shadow hover:bg-orange-800 font-bold tracking-widest w-full transition-colors">練習開始</button>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // ②-B 練習モード
                 practice() {
                     const s = app.state.practice;
                     if(s.isFinished) {
@@ -459,7 +490,6 @@
                     return `
                         <div class="flex-1 wagara-bg p-6 overflow-y-auto">
                             <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-4">
-                                
                                 <!-- CPU戦 -->
                                 <div class="bg-white p-6 rounded shadow border-t-4 border-stone-800">
                                     <div class="flex items-center gap-4 mb-4">
@@ -471,7 +501,6 @@
                                         ${cpuOptionsHTML}
                                     </div>
                                 </div>
-
                                 <!-- 2人対戦 -->
                                 <div class="bg-white p-6 rounded shadow border-t-4 border-red-800 h-fit">
                                     <div class="flex items-center gap-4 mb-4">
@@ -509,13 +538,11 @@
                         `;
                     }
 
-                    // 札の生成
                     const boardHTML = s.board.map(card => {
                         const hand = s.hands.find(h => h.cardId === card.id);
                         let extraClass = "";
                         let handHTML = "";
                         if(hand) {
-                            // CPUなら上から(rotate-180)、プレイヤーなら下から手が伸びる
                             const rotateClass = hand.player === 'cpu' ? 'rotate-180' : '';
                             if(hand.isCorrect) {
                                 extraClass = "ring-4 ring-green-500 animate-vanish z-20";
@@ -546,16 +573,17 @@
                                 </div>
                             </div>
                             
-                            <div class="bg-stone-800 p-4 text-center min-h-[100px] flex flex-col justify-center shadow-lg relative z-10">
+                            <!-- 中央部分をスリムに -->
+                            <div class="bg-stone-800 p-2 sm:p-4 text-center min-h-[80px] flex flex-col justify-center shadow-lg relative z-10">
                                 ${s.gameState === 'ready' ? 
-                                    `<button onclick="app.nextRoundCpu()" class="bg-red-800 text-white px-10 py-3 rounded font-bold font-serif tracking-widest text-lg animate-pulse mx-auto shadow-lg hover:bg-red-700">試合開始</button>` : 
+                                    `<button onclick="app.nextRoundCpu()" class="bg-red-800 text-white px-8 py-2 rounded font-bold font-serif tracking-widest text-base sm:text-lg animate-pulse mx-auto shadow-lg hover:bg-red-700">試合開始</button>` : 
                                     `<div>
-                                        <p class="text-[10px] text-stone-400 mb-2 tracking-widest"><i class="fa-solid fa-volume-high"></i> 残り${s.deck.length + 1}首</p>
-                                        <p class="text-lg sm:text-2xl font-serif text-white tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</p>
+                                        <p class="text-[9px] sm:text-[10px] text-stone-400 mb-1 tracking-widest leading-none"><i class="fa-solid fa-volume-high"></i> 残り${s.deck.length + 1}首</p>
+                                        <p class="text-base sm:text-xl font-serif text-white tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</p>
                                     </div>`
                                 }
                             </div>
-                            <div class="bg-[#d1cfa9] text-stone-800 text-center py-1 font-bold shadow-inner text-xs tracking-widest font-serif border-y-2 border-stone-700">${s.message}</div>
+                            <div class="bg-[#d1cfa9] text-stone-800 text-center py-1 font-bold shadow-inner text-[10px] sm:text-xs tracking-widest font-serif border-y-2 border-stone-700">${s.message}</div>
                             
                             <div class="flex-1 tatami-bg p-2 sm:p-4 relative overflow-auto">
                                 <div class="max-w-4xl mx-auto flex flex-wrap justify-center content-start gap-2 sm:gap-4 h-full pt-4 pb-12">
@@ -592,11 +620,12 @@
                             const isHighlight = s.highlightId === card.id;
                             const hand = s.hands.find(h => h.cardId === card.id && h.player === `p${pNum}`);
                             
-                            let extraClass = isHighlight ? "ring-4 ring-yellow-400 animate-pulse z-20" : "";
+                            // 両者不正解の際の緑色強調（背景も緑がかるように）
+                            let extraClass = isHighlight ? "ring-4 ring-green-500 bg-green-100 scale-110 z-40 transition-transform shadow-2xl" : "";
+                            let textClass = isHighlight ? "text-green-800 font-bold" : "text-stone-800";
                             let handHTML = "";
                             
                             if(hand) {
-                                // 各プレイヤー側から手が伸びるように見える（P2のコンテナは既に回転済みなので指は上のままでOK）
                                 if(hand.isCorrect) {
                                     extraClass += " ring-4 ring-green-500 animate-vanish z-30";
                                     handHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -613,7 +642,7 @@
                             return `
                                 <button onclick="app.actionBattleLocal(${pNum}, ${card.id})" ${s.gameState !== 'playing' ? 'disabled' : ''} 
                                     class="karuta-card w-[4rem] h-[6rem] sm:w-20 sm:h-32 flex items-center justify-center p-1 relative bg-white ${extraClass}">
-                                    <p class="vertical-rl font-serif text-[13px] sm:text-base text-stone-800 leading-loose tracking-[0.2em]">${formatRuby(card.shimo)}</p>
+                                    <p class="vertical-rl font-serif text-[13px] sm:text-base ${textClass} leading-loose tracking-[0.2em]">${formatRuby(card.shimo)}</p>
                                     ${handHTML}
                                 </button>
                             `;
@@ -628,16 +657,16 @@
                                 ${renderPlayerArea(2)}
                             </div>
 
-                            <!-- 中央コントローラー -->
-                            <div class="h-28 sm:h-36 bg-stone-950 border-y-4 border-stone-700 flex flex-col items-center justify-center text-white relative z-20 shadow-2xl px-4">
-                                <button onclick="app.goTo('battleMenu')" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white p-2">
-                                    <i class="fa-solid fa-xmark text-2xl"></i>
+                            <!-- 中央コントローラー (ご要望通り、縦幅を極力狭くスリムに) -->
+                            <div class="h-16 sm:h-20 bg-stone-950 border-y-2 border-stone-700 flex flex-col items-center justify-center text-white relative z-20 shadow-xl px-4 py-1">
+                                <button onclick="app.goTo('battleMenu')" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white p-2 transition-colors">
+                                    <i class="fa-solid fa-xmark text-xl"></i>
                                 </button>
                                 <div class="text-center w-full max-w-lg">
                                     ${s.gameState === 'ready' ? 
-                                        `<button onclick="app.nextRoundLocal()" class="bg-red-800 text-white px-10 py-3 rounded font-bold font-serif text-xl tracking-widest animate-pulse shadow-lg">試合開始</button>` :
-                                        `<p class="text-stone-400 text-[10px] sm:text-xs font-sans font-bold mb-2 tracking-widest">${s.message}</p>
-                                         <div class="text-lg sm:text-2xl tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</div>`
+                                        `<button onclick="app.nextRoundLocal()" class="bg-red-800 text-white px-6 py-1 rounded font-bold font-serif text-base tracking-widest animate-pulse shadow-lg hover:bg-red-700">試合開始</button>` :
+                                        `<p class="text-stone-400 text-[9px] sm:text-[10px] font-sans font-bold tracking-widest leading-none mb-1">${s.message}</p>
+                                         <div class="text-sm sm:text-lg tracking-widest leading-none">${formatRuby(s.currentPoem?.kami)}</div>`
                                     }
                                 </div>
                             </div>
@@ -677,17 +706,28 @@
                     s.memorized.push(id);
                 }
                 this.saveStats();
-                // 裏返っている状態を解除して元に戻す
                 this.state.learn.flippedCards.delete(id);
                 this.render();
             },
 
             // 練習モード
             startPractice() {
-                const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 5);
+                // 選択された範囲で配列を絞り込む
+                const [min, max] = this.state.practiceRange.split('-').map(Number);
+                const filteredPoems = POEMS.filter(p => p.id >= min && p.id <= max);
+                
+                const shuffled = [...filteredPoems].sort(() => 0.5 - Math.random());
+                // 対象が5首未満ならあるだけ、それ以上なら5首出題
+                const questionCount = Math.min(5, shuffled.length);
+                const selected = shuffled.slice(0, questionCount); 
+
                 const qs = selected.map(poem => {
-                    const wrong = POEMS.filter(p => p.id !== poem.id).sort(() => 0.5 - Math.random()).slice(0, 3).map(p => p.shimo);
+                    let wrongPool = filteredPoems.filter(p => p.id !== poem.id);
+                    // 範囲が狭くてダミーの選択肢が足りない場合は、全体から補填する
+                    if (wrongPool.length < 3) {
+                        wrongPool = POEMS.filter(p => p.id !== poem.id);
+                    }
+                    const wrong = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3).map(p => p.shimo);
                     const options = [poem.shimo, ...wrong].sort(() => 0.5 - Math.random());
                     return { ...poem, options };
                 });
@@ -705,7 +745,6 @@
                 s.isCorrect = (option === s.questions[s.currentIndex].shimo);
                 if(s.isCorrect) s.score++;
 
-                // ★正解の下の句を読み上げる
                 speakText(s.questions[s.currentIndex].shimo);
                 this.render();
 
@@ -729,8 +768,6 @@
             // CPU対戦モード
             startBattleCpu(level) {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
-                // プロトタイプ時は全札ではなく、20首など限定した方が画面に収まりやすいですが、今回はご要望通り全札（またはデッキ分）とします。
-                // さすがに100首並べるとスマホでは辛いので、ランダムに20首を抽出して対戦する仕様にします。（実際のカルタ競技も自陣・敵陣で50首）
                 const matchDeck = shuffled.slice(0, 20);
                 this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [] };
                 this.goTo('battleCpu');
@@ -772,18 +809,17 @@
                     s.scoreP++;
                     s.message = '見事！あなたが取りました。';
                     s.gameState = 'round_end';
-                    this.render(); // ここで緑枠＆vanishアニメーション発動
+                    this.render(); 
                     
                     setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundCpu();
-                    }, 1000); // 手が見える時間を確保
+                    }, 1000); 
                 } else {
                     s.message = 'お手つき！CPUの動きを待ちます...';
-                    this.render(); // ここで赤枠＆shakeアニメーション発動
+                    this.render(); 
                     
                     setTimeout(() => {
-                        // 赤い手アイコンと枠を消す
                         s.hands = s.hands.filter(h => h.cardId !== cardId);
                         this.render();
                     }, 500);
@@ -807,7 +843,7 @@
             // 2人対戦（ローカル）モード
             startBattleLocal() {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
-                const matchDeck = shuffled.slice(0, 20); // 画面サイズの都合上、20枚で勝負
+                const matchDeck = shuffled.slice(0, 20); 
                 this.state.battleLocal = { gameState: 'ready', deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '中央の開始ボタンを押してください', hands: [], p1Missed: false, p2Missed: false, highlightId: null };
                 this.goTo('battleLocal');
             },
@@ -858,15 +894,20 @@
                         s.hands = s.hands.filter(h => !(h.cardId === cardId && h.player === `p${pNum}`));
                         
                         if(s.p1Missed && s.p2Missed) {
+                            // ★ 両者お手つき時の処理（緑色・拡大強調・下の句の音声読み上げ）
                             window.speechSynthesis.cancel();
                             s.gameState = 'round_end';
-                            s.message = "両者お手つき！正解はこちらです。";
+                            s.message = "両者お手つき！正解はこちら";
                             s.highlightId = s.currentPoem.id;
                             this.render();
+                            
+                            // 正解の下の句を読み上げる
+                            speakText(s.currentPoem.shimo);
+                            
                             setTimeout(() => {
                                 s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                                 this.nextRoundLocal();
-                            }, 3000);
+                            }, 3500); // 読み上げが終わるように少し長めに待つ
                         } else {
                             this.render();
                         }
