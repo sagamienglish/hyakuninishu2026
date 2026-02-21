@@ -74,108 +74,109 @@
     <script>
         // ==========================================
         // 1. データ定義（百人一首 全100首）
+        // ※提供されたmp3ファイルのタイムスタンプデータを組み込みました
         // ==========================================
         const POEMS = [
-            { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの", yomiKami:"あきのたの かりおのいおの とまおあらみ", yomiShimo:"わがころもでわ つゆにぬれつつ" },
-            { id:2, creator:"[持統天皇:じとうてんのう]", kami:"[春:はる]すぎて [夏:なつ]来[にけらし:にけらし] [白妙:しろたへ]の", shimo:"[衣:ころも]ほすてふ [天:あま]の[香具山:かぐやま]", kimari:"はるす", yomiKami:"はるすぎて なつきにけらし しろたえの", yomiShimo:"ころもほすちょう あまのかぐやま" },
-            { id:3, creator:"[柿本人麻呂:かきのもとのひとまろ]", kami:"あしびきの [山鳥:やまどり]の[尾:を]の しだり[尾:を]の", shimo:"ながながし[夜:よ]を ひとりかも[寝:ね]む", kimari:"あし", yomiKami:"あしびきの やまどりのおの しだりおの", yomiShimo:"ながながしよお ひとりかもねん" },
-            { id:4, creator:"[山部赤人:やまべのあかひと]", kami:"[田子:たご]の[浦:うら]に うち[出:い]でて[見:み]れば [白妙:しろたへ]の", shimo:"[富士:ふじ]の[高嶺:たかね]に [雪:ゆき]は[降:ふ]りつつ", kimari:"たご", yomiKami:"たごのうらに うちいでてみれば しろたえの", yomiShimo:"ふじのたかねに ゆきわふりつつ" },
-            { id:5, creator:"[猿丸大夫:さるまるだゆう]", kami:"[奥山:おくやま]に [紅葉:もみぢ][踏:ふ]みわけ [鳴:な]く[鹿:しか]の", shimo:"[声:こゑ]きく[時:とき]ぞ [秋:あき]は[悲:かな]しき", kimari:"おく", yomiKami:"おくやまに もみじふみわけ なくしかの", yomiShimo:"こえきくときぞ あきわかなしき" },
-            { id:6, creator:"[中納言家持:ちゅうなごんやかもち]", kami:"かささぎの [渡:わた]せる[橋:はし]に おく[霜:しも]の", shimo:"[白:しろ]きを[見:み]れば [夜:よ]ぞふけにける", kimari:"かさ", yomiKami:"かささぎの わたせるはしに おくしもの", yomiShimo:"しろきおみれば よぞふけにける" },
-            { id:7, creator:"[安倍仲麿:あべのなかまろ]", kami:"[天:あま]の[原:はら] ふりさけ[見:み]れば [春日:かすが]なる", shimo:"[三笠:みかさ]の[山:やま]に [出:い]でし[月:つき]かも", kimari:"あまの", yomiKami:"あまのはら ふりさけみれば かすがなる", yomiShimo:"みかさのやまに いでしつきかも" },
-            { id:8, creator:"[喜撰法師:きせんほうし]", kami:"わが[庵:いほ]は [都:みやこ]のたつみ しかぞ[住:す]む", shimo:"[世:よ]をうぢ[山:やま]と [人:ひと]はいふなり", kimari:"わがい", yomiKami:"わがいおわ みやこのたつみ しかぞすむ", yomiShimo:"よおうじやまと ひとわいうなり" },
-            { id:9, creator:"[小野小町:おののこまち]", kami:"[花:はな]の[色:いろ]は うつりにけりな いたづらに", shimo:"わが[身世:みよ]にふる ながめせしまに", kimari:"はなの", yomiKami:"はなのいろわ うつりにけりな いたずらに", yomiShimo:"わがみよにふる ながめせしまに" },
-            { id:10, creator:"[蝉丸:せみまる]", kami:"これやこの [行:ゆ]くも[帰:かへ]るも [別:わか]れては", shimo:"[知:し]るも[知:し]らぬも [逢坂:あふさか]の[関:せき]", kimari:"これ", yomiKami:"これやこの ゆくもかえるも わかれてわ", yomiShimo:"しるもしらぬも おうさかのせき" },
-            { id:11, creator:"[参議篁:さんぎたかむら]", kami:"わたの[原:はら] 八十島かけて 漕ぎ出でぬと", shimo:"[人:ひと]には告げよ [海人:あま]の釣舟", kimari:"わたのはら や", yomiKami:"わたのはら やそしまかけて こぎいでぬと", yomiShimo:"ひとにわつげよ あまのつりぶね" },
-            { id:12, creator:"[僧正遍昭:そうじょうへんじょう]", kami:"[天:あま]つ[風:かぜ] 雲の通ひ路 吹きとぢよ", shimo:"[乙女:おとめ]の[姿:すがた] しばしとどめむ", kimari:"あまつ", yomiKami:"あまつかぜ くものかよいじ ふきとじよ", yomiShimo:"おとめのすがた しばしとどめん" },
-            { id:13, creator:"[陽成院:ようぜいいん]", kami:"[筑波嶺:つくばね]の 峰より落つる みなの[川:がわ]", shimo:"[恋:こい]ぞつもりて 淵となりぬる", kimari:"つく", yomiKami:"つくばねの みねよりおつる みなのがわ", yomiShimo:"こいぞつもりて ふちとなりぬる" },
-            { id:14, creator:"[河原左大臣:かわらのさだいじん]", kami:"[陸奥:みちのく]の しのぶもぢずり 誰ゆゑに", shimo:"乱れそめにし 我ならなくに", kimari:"みち", yomiKami:"みちのくの しのぶもじずり たれゆえに", yomiShimo:"みだれそめにし われならなくに" },
-            { id:15, creator:"[光孝天皇:こうこうてんのう]", kami:"[君:きみ]がため [春:はる]の[野:の]に出でて 若菜摘む", shimo:"わが[衣手:ころもで]に [雪:ゆき]は降りつつ", kimari:"きみがため は", yomiKami:"きみがため はるののにいでて わかなつむ", yomiShimo:"わがころもでに ゆきわふりつつ" },
-            { id:16, creator:"[中納言行平:ちゅうなごんゆきひら]", kami:"立ち別れ いなばの山の 峰に生ふる", shimo:"まつとし聞かば 今帰り来む", kimari:"たち", yomiKami:"たちわかれ いなばのやまの みねにおうる", yomiShimo:"まつとしきかば いまかえりこん" },
-            { id:17, creator:"[在原業平朝臣:ありわらのなりひらあそん]", kami:"ちはやぶる 神代も聞かず [竜田川:たつたがわ]", shimo:"からくれなゐに [水:みず]くくるとは", kimari:"ちは", yomiKami:"ちはやぶる かみよもきかず たつたがわ", yomiShimo:"からくれないに みずくくるとわ" },
-            { id:18, creator:"[藤原敏行朝臣:ふじわらのとしゆきあそん]", kami:"住の江の 岸に寄る波 よるさへや", shimo:"[夢:ゆめ]の通ひ路 [人:ひと]目よくらむ", kimari:"す", yomiKami:"すみのえの きしによるなみ よるさえや", yomiShimo:"ゆめのかよいじ ひとめよくらん" },
-            { id:19, creator:"[伊勢:いせ]", kami:"難波潟 みじかき芦の ふしの間も", shimo:"逢はでこの世を 過ぐしてよとや", kimari:"なにわが", yomiKami:"なにわがた みじかきあしの ふしのまも", yomiShimo:"あわでこのよお すぐしてよとや" },
-            { id:20, creator:"[元良親王:もとよししんのう]", kami:"わびぬれば 今はた同じ 難波なる", shimo:"みをつくしても 逢はむとぞ思ふ", kimari:"わび", yomiKami:"わびぬれば いまわたおなじ なにわなる", yomiShimo:"みおつくしても あわんとぞおもう" },
-            { id:21, creator:"[素性法師:そせいほうし]", kami:"今来むと いひしばかりに 長月の", shimo:"有明の月を 待ち出でつるかな", kimari:"いまこ", yomiKami:"いまこんと いいしばかりに ながつきの", yomiShimo:"ありあけのつきお まちいでつるかな" },
-            { id:22, creator:"[文屋康秀:ふんやのやすひで]", kami:"吹くからに 秋の草木の しをるれば", shimo:"むべ山風を 嵐といふらむ", kimari:"ふく", yomiKami:"ふくからに あきのくさきの しおるれば", yomiShimo:"むべやまかぜお あらしというらん" },
-            { id:23, creator:"[大江千里:おおえのちさと]", kami:"月見れば 千々に物こそ 悲しけれ", shimo:"わが身一つの 秋にはあらねど", kimari:"つき", yomiKami:"つきみれば ちじにものこそ かなしけれ", yomiShimo:"わがみひとつの あきにわあらねど" },
-            { id:24, creator:"[菅家:かんけ]", kami:"このたびは 幣もとりあへず 手向山", shimo:"紅葉の錦 神のまにまに", kimari:"この", yomiKami:"このたびわ ぬさもとりあえず たむけやま", yomiShimo:"もみじのにしき かみのまにまに" },
-            { id:25, creator:"[三条右大臣:さんじょうのうだいじん]", kami:"名にし負はば 逢坂山の さねかづら", shimo:"人に知られで くるよしもがな", kimari:"なにし", yomiKami:"なにしおわば おうさかやまの さねかずら", yomiShimo:"ひとにしられで くるよしもがな" },
-            { id:26, creator:"[貞信公:ていしんこう]", kami:"小倉山 峰のもみぢ葉 心あらば", shimo:"今ひとたびの みゆき待たなむ", kimari:"をぐ", yomiKami:"おぐらやま みねのもみじば こころあらば", yomiShimo:"いまひとたびの みゆきまたなん" },
-            { id:27, creator:"[中納言兼輔:ちゅうなごんかねすけ]", kami:"みかの原 わきて流るる いづみ川", shimo:"いつ見きとてか 恋しかるらむ", kimari:"みか", yomiKami:"みかのはら わきてながるる いずみがわ", yomiShimo:"いつみきとてか こいしかるらん" },
-            { id:28, creator:"[源宗于朝臣:みなもとのむねゆきあそん]", kami:"山里は 冬ぞ寂しさ まさりける", shimo:"人目も草も かれぬと思へば", kimari:"やまざ", yomiKami:"やまざとわ ふゆぞさびしさ まさりける", yomiShimo:"ひとめもくさも かれぬとおもえば" },
-            { id:29, creator:"[凡河内躬恒:おおしこうちのみつね]", kami:"心あてに 折らばや折らむ 初霜の", shimo:"置きまどはせる 白菊の花", kimari:"こころあ", yomiKami:"こころあてに おらばやおらん はつしもの", yomiShimo:"おきまどわせる しらぎくのはな" },
-            { id:30, creator:"[壬生忠岑:みぶのただみね]", kami:"有明の つれなく見えし 別れより", shimo:"暁ばかり 憂きものはなし", kimari:"ありあ", yomiKami:"ありあけの つれなくみえし わかれより", yomiShimo:"あかつきばかり うきものわなし" },
-            { id:31, creator:"[坂上是則:さかのうえのこれのり]", kami:"朝ぼらけ 有明の月と 見るまでに", shimo:"吉野の里に 降れる白雪", kimari:"あさぼらけ あ", yomiKami:"あさぼらけ ありあけのつきと みるまでに", yomiShimo:"よしののさとに ふれるしらゆき" },
-            { id:32, creator:"[春道列樹:はるみちのつらき]", kami:"山川に 風のかけたる しがらみは", shimo:"流れもあへぬ 紅葉なりけり", kimari:"やまが", yomiKami:"やまがわに かぜのかけたる しがらみわ", yomiShimo:"ながれもあえぬ もみじなりけり" },
-            { id:33, creator:"[紀友則:きのとものり]", kami:"ひさかたの 光のどけき 春の日に", shimo:"しづ心なく 花の散るらむ", kimari:"ひさ", yomiKami:"ひさかたの ひかりのどけき はるのひに", yomiShimo:"しずごころなく はなのちるらん" },
-            { id:34, creator:"[藤原興風:ふじわらのおきかぜ]", kami:"誰をかも 知る人にせむ 高砂の", shimo:"松も昔の 友ならなくに", kimari:"たれ", yomiKami:"たれおかも しるひとにせん たかさごの", yomiShimo:"まつもむかしの ともならなくに" },
-            { id:35, creator:"[紀貫之:きのつらゆき]", kami:"人はいさ 心も知らず ふるさとは", shimo:"花ぞ昔の 香ににほひける", kimari:"ひとは", yomiKami:"ひとわいさ こころもしらず ふるさとわ", yomiShimo:"はなぞむかしの かににおいける" },
-            { id:36, creator:"[清原深養父:きよはらのふかやぶ]", kami:"夏の夜は まだ宵ながら 明けぬるを", shimo:"雲のいづこに 月宿るらむ", kimari:"なつ", yomiKami:"なつのよわ まだよいながら あけぬるお", yomiShimo:"くものいずこに つきやどるらん" },
-            { id:37, creator:"[文屋朝康:ふんやのあさやす]", kami:"白露に 風の吹きしく 秋の野は", shimo:"つらぬきとめぬ 玉ぞ散りける", kimari:"しら", yomiKami:"しらつゆに かぜのふきしく あきののわ", yomiShimo:"つらぬきとめぬ たまぞちりける" },
-            { id:38, creator:"[右近:うこん]", kami:"忘らるる 身をば思はず 誓ひてし", shimo:"人の命の 惜しくもあるかな", kimari:"わすら", yomiKami:"わすられる みおばおもわず ちかいてし", yomiShimo:"ひとのいのちの おしくもあるかな" },
-            { id:39, creator:"[参議等:さんぎひとし]", kami:"浅茅生の 小野の篠原 しのぶれど", shimo:"あまりてなどか 人の恋しき", kimari:"あさぢ", yomiKami:"あさじうの おののしのはら しのぶれど", yomiShimo:"あまりてなどか ひとのこいしき" },
-            { id:40, creator:"[平兼盛:たいらのかねもり]", kami:"忍ぶれど 色に出でにけり わが恋は", shimo:"物や思ふと 人の問ふまで", kimari:"しの", yomiKami:"しのぶれど いろにいでにけり わがこいわ", yomiShimo:"ものやおもうと ひとのとうまで" },
-            { id:41, creator:"[壬生忠見:みぶのただみ]", kami:"恋すてふ わが名はまだき 立ちにけり", shimo:"人知れずこそ 思ひそめしか", kimari:"こい", yomiKami:"こいすちょう わがなわまだき たちにけり", yomiShimo:"ひとしれずこそ おもいそめしか" },
-            { id:42, creator:"[清原元輔:きよはらのもとすけ]", kami:"契りきな かたみに袖を しぼりつつ", shimo:"末の松山 波越さじとは", kimari:"ちぎりき", yomiKami:"ちぎりきな かたみにそでお しぼりつつ", yomiShimo:"すえのまつやま なみこさじとわ" },
-            { id:43, creator:"[権中納言敦忠:ごんちゅうなごんあつただ]", kami:"逢ひ見ての のちの心に くらぶれば", shimo:"昔は物を 思はざりけり", kimari:"あい", yomiKami:"あいみての のちのこころに くらぶれば", yomiShimo:"むかしわものお おもわざりけり" },
-            { id:44, creator:"[中納言朝忠:ちゅうなごんあさただ]", kami:"逢ふことの 絶えてしなくは なかなかに", shimo:"人をも身をも 恨みざらまし", kimari:"あふこ", yomiKami:"おうことの たえてしなくわ なかなかに", yomiShimo:"ひとおもみおも うらみざらまし" },
-            { id:45, creator:"[謙徳公:けんとくこう]", kami:"あはれとも いふべき人は 思ほえで", shimo:"身のいたづらに なりぬべきかな", kimari:"あはれ", yomiKami:"あわれとも いうべきひとわ おもおえで", yomiShimo:"みのいたずらに なりぬべきかな" },
-            { id:46, creator:"[曾禰好忠:そねのよしただ]", kami:"由良の門を 渡る舟人 かぢを絶え", shimo:"ゆくへも知らぬ 恋の道かな", kimari:"ゆら", yomiKami:"ゆらのとお わたるふなびと かじおたえ", yomiShimo:"ゆくえもしらぬ こいのみちかな" },
-            { id:47, creator:"[恵慶法師:えぎょうほうし]", kami:"八重葎 しげれる宿の さびしきに", shimo:"人こそ見えね 秋は来にけり", kimari:"やえ", yomiKami:"やえむぐら しげれるやどの さびしきに", yomiShimo:"ひとこそみえね あきわきにけり" },
-            { id:48, creator:"[源重之:みなもとのしげゆき]", kami:"風をいたみ 岩打つ波の おのれのみ", shimo:"くだけて物を 思ふころかな", kimari:"かぜを", yomiKami:"かぜおいたみ いわうつなみの おのれのみ", yomiShimo:"くだけてものお おもうころかな" },
-            { id:49, creator:"[大中臣能宣朝臣:おおなかとみのよしのぶあそん]", kami:"御垣守 衛士のたく火の 夜は燃え", shimo:"昼は消えつつ 物をこそ思へ", kimari:"みかき", yomiKami:"みかきもり えじのたくひの よるわもえ", yomiShimo:"ひるわきえつつ ものおこそおもえ" },
-            { id:50, creator:"[藤原義孝:ふじわらのよしたか]", kami:"君がため 惜しからざりし 命さへ", shimo:"長くもがなと 思ひけるかな", kimari:"きみがため お", yomiKami:"きみがため おしからざりし いのちさえ", yomiShimo:"ながくもがなと おもいけるかな" },
-            { id:51, creator:"[藤原実方朝臣:ふじわらのさねかたあそん]", kami:"かくとだに えやはいぶきの さしも草", shimo:"さしも知らじな 燃ゆる思ひを", kimari:"かく", yomiKami:"かくとだに えやわいぶきの さしもぐさ", yomiShimo:"さしもしらじな もゆるおもいお" },
-            { id:52, creator:"[藤原道信朝臣:ふじわらのみちのぶあそん]", kami:"明けぬれば 暮るるものとは 知りながら", shimo:"なほ恨めしき 朝ぼらけかな", kimari:"あけ", yomiKami:"あけぬれば くるるものとわ しりながら", yomiShimo:"なおうらめしき あさぼらけかな" },
-            { id:53, creator:"[右大将道綱母:うだいしょうみちつなのはは]", kami:"嘆きつつ ひとり寝る夜の 明くる間は", shimo:"いかに久しき ものとかは知る", kimari:"なげ", yomiKami:"なげきつつ ひとりぬるよの あくるまわ", yomiShimo:"いかにひさしき ものとかわしる" },
-            { id:54, creator:"[儀同三司母:ぎどうさんしのはは]", kami:"忘れじの 行く末までは かたければ", shimo:"今日を限りの 命ともがな", kimari:"わすれ", yomiKami:"わすれじの ゆくすえまでわ かたければ", yomiShimo:"きょうおかぎりの いのちともがな" },
-            { id:55, creator:"[大納言公任:だいなごんきんとう]", kami:"滝の音は 絶えて久しく なりぬれど", shimo:"名こそ流れて なほ聞こえけれ", kimari:"たき", yomiKami:"たきのおとわ たえてひさしく なりぬれど", yomiShimo:"なこそながれて なおきこえけれ" },
-            { id:56, creator:"[和泉式部:いずみしきぶ]", kami:"あらざらむ この世のほかの 思ひ出に", shimo:"今ひとたびの 逢ふこともがな", kimari:"あらざ", yomiKami:"あらざらん このよのほかの おもいでに", yomiShimo:"いまひとたびの おうこともがな" },
-            { id:57, creator:"[紫式部:むらさきしきぶ]", kami:"めぐり逢ひて 見しやそれとも わかぬ間に", shimo:"雲隠れにし 夜半の月かな", kimari:"め", yomiKami:"めぐりあいて みしやそれとも わかぬまに", yomiShimo:"くもがくれにし よわのつきかな" },
-            { id:58, creator:"[大弐三位:だいにのさんみ]", kami:"有馬山 猪名の笹原 風吹けば", shimo:"いでそよ人を 忘れやはする", kimari:"ありま", yomiKami:"ありまやま いなのささはら かぜふけば", yomiShimo:"いでそよひとお わすれやわする" },
-            { id:59, creator:"[赤染衛門:あかぞめえもん]", kami:"やすらはで 寝なましものを さ夜更けて", shimo:"傾くまでの 月を見しかな", kimari:"やす", yomiKami:"やすらわで ねなましものお さよふけて", yomiShimo:"かたぶくまでの つきおみしかな" },
-            { id:60, creator:"[小式部内侍:こしきぶのないし]", kami:"大江山 いく野の道の 遠ければ", shimo:"まだふみもみず 天の橋立", kimari:"おおえ", yomiKami:"おおえやま いくののみちの とおければ", yomiShimo:"まだふみもみず あまのはしだて" },
-            { id:61, creator:"[伊勢大輔:いせのたいふ]", kami:"いにしへの 奈良の都の 八重桜", shimo:"けふ九重に にほひぬるかな", kimari:"いに", yomiKami:"いにしえの ならのみやこの やえざくら", yomiShimo:"きょうここのえに においぬるかな" },
-            { id:62, creator:"[清少納言:せいしょうなごん]", kami:"夜をこめて 鳥のそら音は はかるとも", shimo:"よに逢坂の 関は許さじ", kimari:"よを", yomiKami:"よおこめて とりのそらねわ はかるとも", yomiShimo:"よにおうさかの せきわゆるさじ" },
-            { id:63, creator:"[左京大夫道雅:さきょうのだいぶみちまさ]", kami:"今はただ 思ひ絶えなむ とばかりを", shimo:"人づてならで 言ふよしもがな", kimari:"いまは", yomiKami:"いまわただ おもいたえなん とばかりお", yomiShimo:"ひとづてならで いうよしもがな" },
-            { id:64, creator:"[権中納言定頼:ごんちゅうなごんさだより]", kami:"朝ぼらけ 宇治の川霧 たえだえに", shimo:"あらはれわたる 瀬々の網代木", kimari:"あさぼらけ う", yomiKami:"あさぼらけ うじのかわぎり たえだえに", yomiShimo:"あらわれわたる せぜのあじろぎ" },
-            { id:65, creator:"[相模:さがみ]", kami:"恨みわび 干さぬ袖だに あるものを", shimo:"恋に朽ちなむ 名こそ惜しけれ", kimari:"うら", yomiKami:"うらみわび ほさぬそでだに あるものお", yomiShimo:"こいにくちなん なこそおしけれ" },
-            { id:66, creator:"[前大僧正行尊:さきのだいそうじょうぎょうそん]", kami:"もろともに あはれと思へ 山桜", shimo:"花よりほかに 知る人もなし", kimari:"もろ", yomiKami:"もろともに あわれとおもえ やまざくら", yomiShimo:"はなよりほかに しるひともなし" },
-            { id:67, creator:"[周防内侍:すおうのないし]", kami:"春の夜の 夢ばかりなる 手枕に", shimo:"かひなく立たむ 名こそ惜しけれ", kimari:"はるの", yomiKami:"はるのよの ゆめばかりなる たまくらに", yomiShimo:"かいなくたたん なこそおしけれ" },
-            { id:68, creator:"[三条院:さんじょういん]", kami:"心にも あらでうき世に ながらへば", shimo:"恋しかるべき 夜半の月かな", kimari:"こころに", yomiKami:"こころにも あらでうきよに ながらえば", yomiShimo:"こいしかるべき よわのつきかな" },
-            { id:69, creator:"[能因法師:のういんほうし]", kami:"嵐吹く 三室の山の もみぢ葉は", shimo:"竜田の川の 錦なりけり", kimari:"あらし", yomiKami:"あらしふく みむろのやまの もみじばわ", yomiShimo:"たつたのかわの にしきなりけり" },
-            { id:70, creator:"[良暹法師:りょうぜんほうし]", kami:"寂しさに 宿を立ち出でて ながむれば", shimo:"いづこも同じ 秋の夕暮れ", kimari:"さ", yomiKami:"さびしさに やどおたちいでて ながむれば", yomiShimo:"いずこもおなじ あきのゆうぐれ" },
-            { id:71, creator:"[大納言経信:だいなごんつねのぶ]", kami:"夕されば 門田の稲葉 おとづれて", shimo:"芦のまろやに 秋風ぞ吹く", kimari:"ゆう", yomiKami:"ゆうされば かどたのいなば おとずれて", yomiShimo:"あしのまろやに あきかぜぞふく" },
-            { id:72, creator:"[祐子内親王家紀伊:ゆうしないしんのうけのきい]", kami:"音に聞く 高師の浜の あだ波は", shimo:"かけじや袖の ぬれもこそすれ", kimari:"おと", yomiKami:"おとにきく たかしのはまの あだなみわ", yomiShimo:"かけじやそでの ぬれもこそすれ" },
-            { id:73, creator:"[権中納言匡房:ごんちゅうなごんまさふさ]", kami:"高砂の 尾の上の桜 咲きにけり", shimo:"外山の霞 立たずもあらなむ", kimari:"たか", yomiKami:"たかさごの おのえのさくら さきにけり", yomiShimo:"とやまのかすみ たたずもあらなん" },
-            { id:74, creator:"[源俊頼朝臣:みなもとのとしよりあそん]", kami:"憂かりける 人を初瀬の 山おろしよ", shimo:"はげしかれとは 祈らぬものを", kimari:"うか", yomiKami:"うかりける ひとおはつせの やまおろしよ", yomiShimo:"はげしかれとわ いのらぬものお" },
-            { id:75, creator:"[藤原基俊:ふじわらのもととし]", kami:"契りおきし させもが露を 命にて", shimo:"あはれ今年の 秋もいぬめり", kimari:"ちぎりお", yomiKami:"ちぎりおきし させもがつゆお いのちにて", yomiShimo:"あわれことしの あきもいぬめり" },
-            { id:76, creator:"[法性寺入道前関白太政大臣:ほうしょうじにゅうどうさきのかんぱくだいじょうだいじん]", kami:"わたの原 漕ぎ出でて見れば ひさかたの", shimo:"雲居にまがふ 沖つ白波", kimari:"わたのはら こ", yomiKami:"わたのはら こぎいでてみれば ひさかたの", yomiShimo:"くもいにまがう おきつしらなみ" },
-            { id:77, creator:"[崇徳院:すとくいん]", kami:"瀬をはやみ 岩にせかるる 滝川の", shimo:"われても末に 逢はむとぞ思ふ", kimari:"せを", yomiKami:"せおはやみ いわにせかるる たきがわの", yomiShimo:"われてもすえに あわんとぞおもう" },
-            { id:78, creator:"[源兼昌:みなもとのかねまさ]", kami:"淡路島 通ふ千鳥の 鳴く声に", shimo:"幾夜寝覚めぬ 須磨の関守", kimari:"あわ", yomiKami:"あわじしま かようちどりの なくこえに", yomiShimo:"いくよねざめぬ すまのせきもり" },
-            { id:79, creator:"[左京大夫顕輔:さきょうのだいぶあきすけ]", kami:"秋風に たなびく雲の 絶え間より", shimo:"もれいづる月の 影のさやけさ", kimari:"あきか", yomiKami:"あきかぜに たなびくくもの たえまより", yomiShimo:"もれいずるつきの かげのさやけさ" },
-            { id:80, creator:"[待賢門院堀河:たいけんもんいんのほりかわ]", kami:"長からむ 心も知らず 黒髪の", shimo:"乱れてけさは 物をこそ思へ", kimari:"ながか", yomiKami:"ながからん こころもしらず くろかみの", yomiShimo:"みだれてけさわ ものおこそおもえ" },
-            { id:81, creator:"[後徳大寺左大臣:ごとくだいじのさだいじん]", kami:"ほととぎす 鳴きつる方を ながむれば", shimo:"ただ有明の 月ぞ残れる", kimari:"ほと", yomiKami:"ほととぎす なきつるかたお ながむれば", yomiShimo:"ただありあけの つきぞのこれる" },
-            { id:82, creator:"[道因法師:どういんほうし]", kami:"思ひわび さても命は あるものを", shimo:"憂きに堪へぬは 涙なりけり", kimari:"おも", yomiKami:"おもいわび さてもいのちわ あるものお", yomiShimo:"うきにたえぬわ なみだなりけり" },
-            { id:83, creator:"[皇太后宮大夫俊成:こうたいごうぐうのだいぶとしなり]", kami:"世の中よ 道こそなけれ 思ひ入る", shimo:"山の奥にも 鹿ぞ鳴くなる", kimari:"よの", yomiKami:"よのなかよ みちこそなけれ おもいいる", yomiShimo:"やまのおくにも しかぞなくなる" },
-            { id:84, creator:"[藤原清輔朝臣:ふじわらのきよすけあそん]", kami:"ながらへば またこのごろや しのばれむ", shimo:"憂しと見し世ぞ 今は恋しき", kimari:"ながか", yomiKami:"ながらえば またこのごろや しのばれん", yomiShimo:"うしとみしよぞ いまわこいしき" },
-            { id:85, creator:"[俊恵法師:しゅんえほうし]", kami:"夜もすがら 物思ふころは 明けやらで", shimo:"閨のひまさへ つれなかりけり", kimari:"よも", yomiKami:"よもすがら ものおもうころわ あけやらで", yomiShimo:"ねやのひまさえ つれなかりけり" },
-            { id:86, creator:"[西行法師:さいぎょうほうし]", kami:"嘆けとて 月やは物を 思はする", shimo:"かこち顔なる わが涙かな", kimari:"なげけ", yomiKami:"なげけとて つきやわものお おもわする", yomiShimo:"かこちがおなる わがなみだかな" },
-            { id:87, creator:"[寂蓮法師:じゃくれんほうし]", kami:"村雨の 露もまだひぬ まきの葉に", shimo:"霧立ちのぼる 秋の夕暮れ", kimari:"む", yomiKami:"むらさめの つゆもまだひぬ まきのはに", yomiShimo:"きりたちのぼる あきのゆうぐれ" },
-            { id:88, creator:"[皇嘉門院別当:こうかもんいんのべっとう]", kami:"難波江の 芦のかりねの ひとよゆゑ", shimo:"みをつくしてや 恋ひわたるべき", kimari:"なにわえ", yomiKami:"なにわえの あしのかりねの ひとよゆえ", yomiShimo:"みおつくしてや こいわたるべき" },
-            { id:89, creator:"[式子内親王:しょくしないしんのう]", kami:"玉の緒よ 絶えなば絶えね ながらへば", shimo:"忍ぶることの 弱りもぞする", kimari:"たま", yomiKami:"たまのおよ たえなばたえね ながらえば", yomiShimo:"しのぶることの よわりもぞする" },
-            { id:90, creator:"[殷富門院大輔:いんぷもんいんのたいふ]", kami:"見せばやな 雄島の海人の 袖だにも", shimo:"濡れにぞ濡れし 色は変はらず", kimari:"みせ", yomiKami:"みせばやな おじまのあまの そでだにも", yomiShimo:"ぬれにぞぬれし いろわかわらず" },
-            { id:91, creator:"[後京極摂政前太政大臣:ごきょうごくせっしょうさきのだいじょうだいじん]", kami:"きりぎりす 鳴くや霜夜の さむしろに", shimo:"衣片敷き ひとりかも寝む", kimari:"きり", yomiKami:"きりぎりす なくやしもよの さむしろに", yomiShimo:"ころもかたしき ひとりかもねん" },
-            { id:92, creator:"[二条院讃岐:にじょういんのさぬき]", kami:"わが袖は 潮干に見えぬ 沖の石の", shimo:"人こそ知らね 乾く間もなし", kimari:"わがそ", yomiKami:"わがそでわ しおいにみえぬ おきのいしの", yomiShimo:"ひとこそしらね かわくまもなし" },
-            { id:93, creator:"[鎌倉右大臣:かまくらうだいじん]", kami:"世の中は 常にもがもな 渚漕ぐ", shimo:"海人の小舟の 綱手かなしも", kimari:"よのなかは", yomiKami:"よのなかわ つねにもがもな なぎさこぐ", yomiShimo:"あまのおぶねの つなでかなしも" },
-            { id:94, creator:"[参議雅経:さんぎまさつね]", kami:"み吉野の 山の秋風 小夜更けて", shimo:"ふるさと寒く 衣打つなり", kimari:"みよ", yomiKami:"みよしのの やまのあきかぜ さよふけて", yomiShimo:"ふるさとさむく ころもうつなり" },
-            { id:95, creator:"[前大僧正慈円:さきのだいそうじょうじえん]", kami:"おほけなく 憂き世の民に おほふかな", shimo:"わが立つ杣に 墨染の袖", kimari:"おほけ", yomiKami:"おおけなく うきよのたみに おおうかな", yomiShimo:"わがたつそまに すみぞめのそで" },
-            { id:96, creator:"[入道前太政大臣:にゅうどうさきのだいじょうだいじん]", kami:"花さそふ 嵐の庭の 雪ならで", shimo:"ふりゆくものは わが身なりけり", kimari:"はなさ", yomiKami:"はなさそう あらしのにわの ゆきならで", yomiShimo:"ふりゆくものわ わがみなりけり" },
-            { id:97, creator:"[権中納言定家:ごんちゅうなごんさだいえ]", kami:"来ぬ人を 松帆の浦の 夕なぎに", shimo:"焼くや藻塩の 身もこがれつつ", kimari:"こぬ", yomiKami:"こぬひとお まつほのうらの ゆうなぎに", yomiShimo:"やくやもしおの みもこがれつつ" },
-            { id:98, creator:"[従二位家隆:じゅにいいたか]", kami:"風そよぐ 楢の小川の 夕暮れは", shimo:"みそぎぞ夏の しるしなりける", kimari:"かぜそ", yomiKami:"かぜそよぐ ならのおがわの ゆうぐれわ", yomiShimo:"みそぎぞなつの しるしなりける" },
-            { id:99, creator:"[後鳥羽院:ごとばいん]", kami:"人も惜し 人も恨めし あぢきなく", shimo:"世を思ふゆゑに 物思ふ身は", kimari:"ひとも", yomiKami:"ひともおし ひともうらめし あじきなく", yomiShimo:"よおおもうゆえに ものおもうみわ" },
-            { id:100, creator:"[順徳院:じゅんとくいん]", kami:"百敷や 古き軒端の しのぶにも", shimo:"なほあまりある 昔なりけり", kimari:"もも", yomiKami:"ももしきや ふるきのきばの しのぶにも", yomiShimo:"なおあまりある むかしなりけり" }
+            { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの", kamiTime:"00:31", shimoTime:"00:39" },
+            { id:2, creator:"[持統天皇:じとうてんのう]", kami:"[春:はる]すぎて [夏:なつ]来[にけらし:にけらし] [白妙:しろたへ]の", shimo:"[衣:ころも]ほすてふ [天:あま]の[香具山:かぐやま]", kimari:"はるす", kamiTime:"00:56", shimoTime:"01:04" },
+            { id:3, creator:"[柿本人麻呂:かきのもとのひとまろ]", kami:"あしびきの [山鳥:やまどり]の[尾:を]の しだり[尾:を]の", shimo:"ながながし[夜:よ]を ひとりかも[寝:ね]む", kimari:"あし", kamiTime:"01:22", shimoTime:"01:30" },
+            { id:4, creator:"[山部赤人:やまべのあかひと]", kami:"[田子:たご]の[浦:うら]に うち[出:い]でて[見:み]れば [白妙:しろたへ]の", shimo:"[富士:ふじ]の[高嶺:たかね]に [雪:ゆき]は[降:ふ]りつつ", kimari:"たご", kamiTime:"01:46", shimoTime:"01:54" },
+            { id:5, creator:"[猿丸大夫:さるまるだゆう]", kami:"[奥山:おくやま]に [紅葉:もみぢ][踏:ふ]みわけ [鳴:な]く[鹿:しか]の", shimo:"[声:こゑ]きく[時:とき]ぞ [秋:あき]は[悲:かな]しき", kimari:"おく", kamiTime:"02:11", shimoTime:"02:18" },
+            { id:6, creator:"[中納言家持:ちゅうなごんやかもち]", kami:"かささぎの [渡:わた]せる[橋:はし]に おく[霜:しも]の", shimo:"[白:しろ]きを[見:み]れば [夜:よ]ぞふけにける", kimari:"かさ", kamiTime:"02:37", shimoTime:"02:44" },
+            { id:7, creator:"[安倍仲麿:あべのなかまろ]", kami:"[天:あま]の[原:はら] ふりさけ[見:み]れば [春日:かすが]なる", shimo:"[三笠:みかさ]の[山:やま]に [出:い]でし[月:つき]かも", kimari:"あまの", kamiTime:"03:02", shimoTime:"03:09" },
+            { id:8, creator:"[喜撰法師:きせんほうし]", kami:"わが[庵:いほ]は [都:みやこ]のたつみ しかぞ[住:す]む", shimo:"[世:よ]をうぢ[山:やま]と [人:ひと]はいふなり", kimari:"わがい", kamiTime:"03:27", shimoTime:"03:34" },
+            { id:9, creator:"[小野小町:おののこまち]", kami:"[花:はな]の[色:いろ]は うつりにけりな いたづらに", shimo:"わが[身世:みよ]にふる ながめせしまに", kimari:"はなの", kamiTime:"03:52", shimoTime:"03:59" },
+            { id:10, creator:"[蝉丸:せみまる]", kami:"これやこの [行:ゆ]くも[帰:かへ]るも [別:わか]れては", shimo:"[知:し]るも[知:し]らぬも [逢坂:あふさか]の[関:せき]", kimari:"これ", kamiTime:"04:17", shimoTime:"04:23" },
+            { id:11, creator:"[参議篁:さんぎたかむら]", kami:"わたの[原:はら] 八十島かけて 漕ぎ出でぬと", shimo:"[人:ひと]には告げよ [海人:あま]の釣舟", kimari:"わたのはら や", kamiTime:"04:42", shimoTime:"04:50" },
+            { id:12, creator:"[僧正遍昭:そうじょうへんじょう]", kami:"[天:あま]つ[風:かぜ] 雲の通ひ路 吹きとぢよ", shimo:"[乙女:おとめ]の[姿:すがた] しばしとどめむ", kimari:"あまつ", kamiTime:"05:07", shimoTime:"05:14" },
+            { id:13, creator:"[陽成院:ようぜいいん]", kami:"[筑波嶺:つくばね]の 峰より落つる みなの[川:がわ]", shimo:"[恋:こい]ぞつもりて 淵となりぬる", kimari:"つく", kamiTime:"05:32", shimoTime:"05:39" },
+            { id:14, creator:"[河原左大臣:かわらのさだいじん]", kami:"[陸奥:みちのく]の しのぶもぢずり 誰ゆゑに", shimo:"乱れそめにし 我ならなくに", kimari:"みち", kamiTime:"05:57", shimoTime:"06:04" },
+            { id:15, creator:"[光孝天皇:こうこうてんのう]", kami:"[君:きみ]がため [春:はる]の[野:の]に出でて 若菜摘む", shimo:"わが[衣手:ころもで]に [雪:ゆき]は降りつつ", kimari:"きみがため は", kamiTime:"06:22", shimoTime:"06:30" },
+            { id:16, creator:"[中納言行平:ちゅうなごんゆきひら]", kami:"立ち別れ いなばの山の 峰に生ふる", shimo:"まつとし聞かば 今帰り来む", kimari:"たち", kamiTime:"06:47", shimoTime:"06:55" },
+            { id:17, creator:"[在原業平朝臣:ありわらのなりひらあそん]", kami:"ちはやぶる 神代も聞かず [竜田川:たつたがわ]", shimo:"からくれなゐに [水:みず]くくるとは", kimari:"ちは", kamiTime:"07:12", shimoTime:"07:19" },
+            { id:18, creator:"[藤原敏行朝臣:ふじわらのとしゆきあそん]", kami:"住の江の 岸に寄る波 よるさへや", shimo:"[夢:ゆめ]の通ひ路 [人:ひと]目よくらむ", kimari:"す", kamiTime:"07:37", shimoTime:"07:45" },
+            { id:19, creator:"[伊勢:いせ]", kami:"難波潟 みじかき芦の ふしの間も", shimo:"逢はでこの世を 過ぐしてよとや", kimari:"なにわが", kamiTime:"08:02", shimoTime:"08:09" },
+            { id:20, creator:"[元良親王:もとよししんのう]", kami:"わびぬれば 今はた同じ 難波なる", shimo:"みをつくしても 逢はむとぞ思ふ", kimari:"わび", kamiTime:"08:27", shimoTime:"08:34" },
+            { id:21, creator:"[素性法師:そせいほうし]", kami:"今来むと いひしばかりに 長月の", shimo:"有明の月を 待ち出でつるかな", kimari:"いまこ", kamiTime:"08:52", shimoTime:"09:00" },
+            { id:22, creator:"[文屋康秀:ふんやのやすひで]", kami:"吹くからに 秋の草木の しをるれば", shimo:"むべ山風を 嵐といふらむ", kimari:"ふく", kamiTime:"09:17", shimoTime:"09:25" },
+            { id:23, creator:"[大江千里:おおえのちさと]", kami:"月見れば 千々に物こそ 悲しけれ", shimo:"わが身一つの 秋にはあらねど", kimari:"つき", kamiTime:"09:43", shimoTime:"09:50" },
+            { id:24, creator:"[菅家:かんけ]", kami:"このたびは 幣もとりあへず 手向山", shimo:"紅葉の錦 神のまにまに", kimari:"この", kamiTime:"10:07", shimoTime:"10:16" },
+            { id:25, creator:"[三条右大臣:さんじょうのうだいじん]", kami:"名にし負はば 逢坂山の さねかづら", shimo:"人に知られで くるよしもがな", kimari:"なにし", kamiTime:"10:32", shimoTime:"10:40" },
+            { id:26, creator:"[貞信公:ていしんこう]", kami:"小倉山 峰のもみぢ葉 心あらば", shimo:"今ひとたびの みゆき待たなむ", kimari:"をぐ", kamiTime:"10:58", shimoTime:"11:05" },
+            { id:27, creator:"[中納言兼輔:ちゅうなごんかねすけ]", kami:"みかの原 わきて流るる いづみ川", shimo:"いつ見きとてか 恋しかるらむ", kimari:"みか", kamiTime:"11:23", shimoTime:"11:30" },
+            { id:28, creator:"[源宗于朝臣:みなもとのむねゆきあそん]", kami:"山里は 冬ぞ寂しさ まさりける", shimo:"人目も草も かれぬと思へば", kimari:"やまざ", kamiTime:"11:47", shimoTime:"11:55" },
+            { id:29, creator:"[凡河内躬恒:おおしこうちのみつね]", kami:"心あてに 折らばや折らむ 初霜の", shimo:"置きまどはせる 白菊の花", kimari:"こころあ", kamiTime:"12:13", shimoTime:"12:20" },
+            { id:30, creator:"[壬生忠岑:みぶのただみね]", kami:"有明の つれなく見えし 別れより", shimo:"暁ばかり 憂きものはなし", kimari:"ありあ", kamiTime:"12:37", shimoTime:"12:45" },
+            { id:31, creator:"[坂上是則:さかのうえのこれのり]", kami:"朝ぼらけ 有明の月と 見るまでに", shimo:"吉野の里に 降れる白雪", kimari:"あさぼらけ あ", kamiTime:"13:03", shimoTime:"13:10" },
+            { id:32, creator:"[春道列樹:はるみちのつらき]", kami:"山川に 風のかけたる しがらみは", shimo:"流れもあへぬ 紅葉なりけり", kimari:"やまが", kamiTime:"13:28", shimoTime:"13:35" },
+            { id:33, creator:"[紀友則:きのとものり]", kami:"ひさかたの 光のどけき 春の日に", shimo:"しづ心なく 花の散るらむ", kimari:"ひさ", kamiTime:"13:53", shimoTime:"14:00" },
+            { id:34, creator:"[藤原興風:ふじわらのおきかぜ]", kami:"誰をかも 知る人にせむ 高砂の", shimo:"松も昔の 友ならなくに", kimari:"たれ", kamiTime:"14:18", shimoTime:"14:25" },
+            { id:35, creator:"[紀貫之:きのつらゆき]", kami:"人はいさ 心も知らず ふるさとは", shimo:"花ぞ昔の 香ににほひける", kimari:"ひとは", kamiTime:"14:43", shimoTime:"14:50" },
+            { id:36, creator:"[清原深養父:きよはらのふかやぶ]", kami:"夏の夜は まだ宵ながら 明けぬるを", shimo:"雲のいづこに 月宿るらむ", kimari:"なつ", kamiTime:"15:08", shimoTime:"15:15" },
+            { id:37, creator:"[文屋朝康:ふんやのあさやす]", kami:"白露に 風の吹きしく 秋の野は", shimo:"つらぬきとめぬ 玉ぞ散りける", kimari:"しら", kamiTime:"15:33", shimoTime:"15:40" },
+            { id:38, creator:"[右近:うこん]", kami:"忘らるる 身をば思はず 誓ひてし", shimo:"人の命の 惜しくもあるかな", kimari:"わすら", kamiTime:"15:58", shimoTime:"16:05" },
+            { id:39, creator:"[参議等:さんぎひとし]", kami:"浅茅生の 小野の篠原 しのぶれど", shimo:"あまりてなどか 人の恋しき", kimari:"あさぢ", kamiTime:"16:23", shimoTime:"16:30" },
+            { id:40, creator:"[平兼盛:たいらのかねもり]", kami:"忍ぶれど 色に出でにけり わが恋は", shimo:"物や思ふと 人の問ふまで", kimari:"しの", kamiTime:"16:48", shimoTime:"16:56" },
+            { id:41, creator:"[壬生忠見:みぶのただみ]", kami:"恋すてふ わが名はまだき 立ちにけり", shimo:"人知れずこそ 思ひそめしか", kimari:"こい", kamiTime:"17:13", shimoTime:"17:21" },
+            { id:42, creator:"[清原元輔:きよはらのもとすけ]", kami:"契りきな かたみに袖を しぼりつつ", shimo:"末の松山 波越さじとは", kimari:"ちぎりき", kamiTime:"17:38", shimoTime:"17:46" },
+            { id:43, creator:"[権中納言敦忠:ごんちゅうなごんあつただ]", kami:"逢ひ見ての のちの心に くらぶれば", shimo:"昔は物を 思はざりけり", kimari:"あい", kamiTime:"18:03", shimoTime:"18:11" },
+            { id:44, creator:"[中納言朝忠:ちゅうなごんあさただ]", kami:"逢ふことの 絶えてしなくは なかなかに", shimo:"人をも身をも 恨みざらまし", kimari:"あふこ", kamiTime:"18:28", shimoTime:"18:35" },
+            { id:45, creator:"[謙徳公:けんとくこう]", kami:"あはれとも いふべき人は 思ほえで", shimo:"身のいたづらに なりぬべきかな", kimari:"あはれ", kamiTime:"18:54", shimoTime:"19:00" },
+            { id:46, creator:"[曾禰好忠:そねのよしただ]", kami:"由良の門を 渡る舟人 かぢを絶え", shimo:"ゆくへも知らぬ 恋の道かな", kimari:"ゆら", kamiTime:"19:19", shimoTime:"19:26" },
+            { id:47, creator:"[恵慶法師:えぎょうほうし]", kami:"八重葎 しげれる宿の さびしきに", shimo:"人こそ見えね 秋は来にけり", kimari:"やえ", kamiTime:"19:43", shimoTime:"19:52" },
+            { id:48, creator:"[源重之:みなもとのしげゆき]", kami:"風をいたみ 岩打つ波の おのれのみ", shimo:"くだけて物を 思ふころかな", kimari:"かぜを", kamiTime:"20:08", shimoTime:"20:15" },
+            { id:49, creator:"[大中臣能宣朝臣:おおなかとみのよしのぶあそん]", kami:"御垣守 衛士のたく火の 夜は燃え", shimo:"昼は消えつつ 物をこそ思へ", kimari:"みかき", kamiTime:"20:33", shimoTime:"20:40" },
+            { id:50, creator:"[藤原義孝:ふじわらのよしたか]", kami:"君がため 惜しからざりし 命さへ", shimo:"長くもがなと 思ひけるかな", kimari:"きみがため お", kamiTime:"20:59", shimoTime:"21:05" },
+            { id:51, creator:"[藤原実方朝臣:ふじわらのさねかたあそん]", kami:"かくとだに えやはいぶきの さしも草", shimo:"さしも知らじな 燃ゆる思ひを", kimari:"かく", kamiTime:"21:23", shimoTime:"21:31" },
+            { id:52, creator:"[藤原道信朝臣:ふじわらのみちのぶあそん]", kami:"明けぬれば 暮るるものとは 知りながら", shimo:"なほ恨めしき 朝ぼらけかな", kimari:"あけ", kamiTime:"21:48", shimoTime:"21:56" },
+            { id:53, creator:"[右大将道綱母:うだいしょうみちつなのはは]", kami:"嘆きつつ ひとり寝る夜の 明くる間は", shimo:"いかに久しき ものとかは知る", kimari:"なげ", kamiTime:"22:13", shimoTime:"22:20" },
+            { id:54, creator:"[儀同三司母:ぎどうさんしのはは]", kami:"忘れじの 行く末までは かたければ", shimo:"今日を限りの 命ともがな", kimari:"わすれ", kamiTime:"22:39", shimoTime:"22:47" },
+            { id:55, creator:"[大納言公任:だいなごんきんとう]", kami:"滝の音は 絶えて久しく なりぬれど", shimo:"名こそ流れて なほ聞こえけれ", kimari:"たき", kamiTime:"23:04", shimoTime:"23:11" },
+            { id:56, creator:"[和泉式部:いずみしきぶ]", kami:"あらざらむ この世のほかの 思ひ出に", shimo:"今ひとたびの 逢ふこともがな", kimari:"あらざ", kamiTime:"23:29", shimoTime:"23:36" },
+            { id:57, creator:"[紫式部:むらさきしきぶ]", kami:"めぐり逢ひて 見しやそれとも わかぬ間に", shimo:"雲隠れにし 夜半の月かな", kimari:"め", kamiTime:"23:54", shimoTime:"24:02" },
+            { id:58, creator:"[大弐三位:だいにのさんみ]", kami:"有馬山 猪名の笹原 風吹けば", shimo:"いでそよ人を 忘れやはする", kimari:"ありま", kamiTime:"24:19", shimoTime:"24:26" },
+            { id:59, creator:"[赤染衛門:あかぞめえもん]", kami:"やすらはで 寝なましものを さ夜更けて", shimo:"傾くまでの 月を見しかな", kimari:"やす", kamiTime:"24:44", shimoTime:"24:52" },
+            { id:60, creator:"[小式部内侍:こしきぶのないし]", kami:"大江山 いく野の道の 遠ければ", shimo:"まだふみもみず 天の橋立", kimari:"おおえ", kamiTime:"25:09", shimoTime:"25:16" },
+            { id:61, creator:"[伊勢大輔:いせのたいふ]", kami:"いにしへの 奈良の都の 八重桜", shimo:"けふ九重に にほひぬるかな", kimari:"いに", kamiTime:"25:34", shimoTime:"25:42" },
+            { id:62, creator:"[清少納言:せいしょうなごん]", kami:"夜をこめて 鳥のそら音は はかるとも", shimo:"よに逢坂の 関は許さじ", kimari:"よを", kamiTime:"25:59", shimoTime:"26:07" },
+            { id:63, creator:"[左京大夫道雅:さきょうのだいぶみちまさ]", kami:"今はただ 思ひ絶えなむ とばかりを", shimo:"人づてならで 言ふよしもがな", kimari:"いまは", kamiTime:"26:24", shimoTime:"26:32" },
+            { id:64, creator:"[権中納言定頼:ごんちゅうなごんさだより]", kami:"朝ぼらけ 宇治の川霧 たえだえに", shimo:"あらはれわたる 瀬々の網代木", kimari:"あさぼらけ う", kamiTime:"26:49", shimoTime:"26:56" },
+            { id:65, creator:"[相模:さがみ]", kami:"恨みわび 干さぬ袖だに あるものを", shimo:"恋に朽ちなむ 名こそ惜しけれ", kimari:"うら", kamiTime:"27:14", shimoTime:"27:22" },
+            { id:66, creator:"[前大僧正行尊:さきのだいそうじょうぎょうそん]", kami:"もろともに あはれと思へ 山桜", shimo:"花よりほかに 知る人もなし", kimari:"もろ", kamiTime:"27:39", shimoTime:"27:46" },
+            { id:67, creator:"[周防内侍:すおうのないし]", kami:"春の夜の 夢ばかりなる 手枕に", shimo:"かひなく立たむ 名こそ惜しけれ", kimari:"はるの", kamiTime:"28:04", shimoTime:"28:10" },
+            { id:68, creator:"[三条院:さんじょういん]", kami:"心にも あらでうき世に ながらへば", shimo:"恋しかるべき 夜半の月かな", kimari:"こころに", kamiTime:"28:29", shimoTime:"28:36" },
+            { id:69, creator:"[能因法師:のういんほうし]", kami:"嵐吹く 三室の山の もみぢ葉は", shimo:"竜田の川の 錦なりけり", kimari:"あらし", kamiTime:"28:54", shimoTime:"29:02" },
+            { id:70, creator:"[良暹法師:りょうぜんほうし]", kami:"寂しさに 宿を立ち出でて ながむれば", shimo:"いづこも同じ 秋の夕暮れ", kimari:"さ", kamiTime:"29:19", shimoTime:"29:27" },
+            { id:71, creator:"[大納言経信:だいなごんつねのぶ]", kami:"夕されば 門田の稲葉 おとづれて", shimo:"芦のまろやに 秋風ぞ吹く", kimari:"ゆう", kamiTime:"29:44", shimoTime:"29:51" },
+            { id:72, creator:"[祐子内親王家紀伊:ゆうしないしんのうけのきい]", kami:"音に聞く 高師の浜の あだ波は", shimo:"かけじや袖の ぬれもこそすれ", kimari:"おと", kamiTime:"30:09", shimoTime:"30:17" },
+            { id:73, creator:"[権中納言匡房:ごんちゅうなごんまさふさ]", kami:"高砂の 尾の上の桜 咲きにけり", shimo:"外山の霞 立たずもあらなむ", kimari:"たか", kamiTime:"30:35", shimoTime:"30:43" },
+            { id:74, creator:"[源俊頼朝臣:みなもとのとしよりあそん]", kami:"憂かりける 人を初瀬の 山おろしよ", shimo:"はげしかれとは 祈らぬものを", kimari:"うか", kamiTime:"31:00", shimoTime:"31:08" },
+            { id:75, creator:"[藤原基俊:ふじわらのもととし]", kami:"契りおきし させもが露を 命にて", shimo:"あはれ今年の 秋もいぬめり", kimari:"ちぎりお", kamiTime:"31:24", shimoTime:"31:32" },
+            { id:76, creator:"[法性寺入道前関白太政大臣:ほうしょうじにゅうどうさきのかんぱくだいじょうだいじん]", kami:"わたの原 漕ぎ出でて見れば ひさかたの", shimo:"雲居にまがふ 沖つ白波", kimari:"わたのはら こ", kamiTime:"31:50", shimoTime:"31:58" },
+            { id:77, creator:"[崇徳院:すとくいん]", kami:"瀬をはやみ 岩にせかるる 滝川の", shimo:"われても末に 逢はむとぞ思ふ", kimari:"せを", kamiTime:"32:15", shimoTime:"32:22" },
+            { id:78, creator:"[源兼昌:みなもとのかねまさ]", kami:"淡路島 通ふ千鳥の 鳴く声に", shimo:"幾夜寝覚めぬ 須磨の関守", kimari:"あわ", kamiTime:"32:40", shimoTime:"32:48" },
+            { id:79, creator:"[左京大夫顕輔:さきょうのだいぶあきすけ]", kami:"秋風に たなびく雲の 絶え間より", shimo:"もれいづる月の 影のさやけさ", kimari:"あきか", kamiTime:"33:05", shimoTime:"33:12" },
+            { id:80, creator:"[待賢門院堀河:たいけんもんいんのほりかわ]", kami:"長からむ 心も知らず 黒髪の", shimo:"乱れてけさは 物をこそ思へ", kimari:"ながか", kamiTime:"33:30", shimoTime:"33:37" },
+            { id:81, creator:"[後徳大寺左大臣:ごとくだいじのさだいじん]", kami:"ほととぎす 鳴きつる方を ながむれば", shimo:"ただ有明の 月ぞ残れる", kimari:"ほと", kamiTime:"33:55", shimoTime:"34:02" },
+            { id:82, creator:"[道因法師:どういんほうし]", kami:"思ひわび さても命は あるものを", shimo:"憂きに堪へぬは 涙なりけり", kimari:"おも", kamiTime:"34:20", shimoTime:"34:28" },
+            { id:83, creator:"[皇太后宮大夫俊成:こうたいごうぐうのだいぶとしなり]", kami:"世の中よ 道こそなけれ 思ひ入る", shimo:"山の奥にも 鹿ぞ鳴くなる", kimari:"よの", kamiTime:"34:45", shimoTime:"34:52" },
+            { id:84, creator:"[藤原清輔朝臣:ふじわらのきよすけあそん]", kami:"ながらへば またこのごろや しのばれむ", shimo:"憂しと見し世ぞ 今は恋しき", kimari:"ながか", kamiTime:"35:10", shimoTime:"35:17" },
+            { id:85, creator:"[俊恵法師:しゅんえほうし]", kami:"夜もすがら 物思ふころは 明けやらで", shimo:"閨のひまさへ つれなかりけり", kimari:"よも", kamiTime:"35:35", shimoTime:"35:43" },
+            { id:86, creator:"[西行法師:さいぎょうほうし]", kami:"嘆けとて 月やは物を 思はする", shimo:"かこち顔なる わが涙かな", kimari:"なげけ", kamiTime:"36:01", shimoTime:"36:08" },
+            { id:87, creator:"[寂蓮法師:じゃくれんほうし]", kami:"村雨の 露もまだひぬ まきの葉に", shimo:"霧立ちのぼる 秋の夕暮れ", kimari:"む", kamiTime:"36:26", shimoTime:"36:33" },
+            { id:88, creator:"[皇嘉門院別当:こうかもんいんのべっとう]", kami:"難波江の 芦のかりねの ひとよゆゑ", shimo:"みをつくしてや 恋ひわたるべき", kimari:"なにわえ", kamiTime:"36:51", shimoTime:"36:58" },
+            { id:89, creator:"[式子内親王:しょくしないしんのう]", kami:"玉の緒よ 絶えなば絶えね ながらへば", shimo:"忍ぶることの 弱りもぞする", kimari:"たま", kamiTime:"37:16", shimoTime:"37:23" },
+            { id:90, creator:"[殷富門院大輔:いんぷもんいんのたいふ]", kami:"見せばやな 雄島の海人の 袖だにも", shimo:"濡れにぞ濡れし 色は変はらず", kimari:"みせ", kamiTime:"37:41", shimoTime:"37:48" },
+            { id:91, creator:"[後京極摂政前太政大臣:ごきょうごくせっしょうさきのだいじょうだいじん]", kami:"きりぎりす 鳴くや霜夜の さむしろに", shimo:"衣片敷き ひとりかも寝む", kimari:"きり", kamiTime:"38:06", shimoTime:"38:14" },
+            { id:92, creator:"[二条院讃岐:にじょういんのさぬき]", kami:"わが袖は 潮干に見えぬ 沖の石の", shimo:"人こそ知らね 乾く間もなし", kimari:"わがそ", kamiTime:"38:31", shimoTime:"38:38" },
+            { id:93, creator:"[鎌倉右大臣:かまくらうだいじん]", kami:"世の中は 常にもがもな 渚漕ぐ", shimo:"海人の小舟の 綱手かなしも", kimari:"よのなかは", kamiTime:"38:56", shimoTime:"39:03" },
+            { id:94, creator:"[参議雅経:さんぎまさつね]", kami:"み吉野の 山の秋風 小夜更けて", shimo:"ふるさと寒く 衣打つなり", kimari:"みよ", kamiTime:"39:21", shimoTime:"39:28" },
+            { id:95, creator:"[前大僧正慈円:さきのだいそうじょうじえん]", kami:"おほけなく 憂き世の民に おほふかな", shimo:"わが立つ杣に 墨染の袖", kimari:"おほけ", kamiTime:"39:46", shimoTime:"39:54" },
+            { id:96, creator:"[入道前太政大臣:にゅうどうさきのだいじょうだいじん]", kami:"花さそふ 嵐の庭の 雪ならで", shimo:"ふりゆくものは わが身なりけり", kimari:"はなさ", kamiTime:"40:11", shimoTime:"40:18" },
+            { id:97, creator:"[権中納言定家:ごんちゅうなごんさだいえ]", kami:"来ぬ人を 松帆の浦の 夕なぎに", shimo:"焼くや藻塩の 身もこがれつつ", kimari:"こぬ", kamiTime:"40:36", shimoTime:"40:43" },
+            { id:98, creator:"[従二位家隆:じゅにいいたか]", kami:"風そよぐ 楢の小川の 夕暮れは", shimo:"みそぎぞ夏の しるしなりける", kimari:"かぜそ", kamiTime:"41:01", shimoTime:"41:08" },
+            { id:99, creator:"[後鳥羽院:ごとばいん]", kami:"人も惜し 人も恨めし あぢきなく", shimo:"世を思ふゆゑに 物思ふ身は", kimari:"ひとも", kamiTime:"41:26", shimoTime:"41:32" },
+            { id:100, creator:"[順徳院:じゅんとくいん]", kami:"百敷や 古き軒端の しのぶにも", shimo:"なほあまりある 昔なりけり", kimari:"もも", kamiTime:"41:51", shimoTime:"41:58" }
         ];
 
         const CPU_LEVELS = [
@@ -187,26 +188,72 @@
         ];
 
         // ==========================================
-        // 2. ヘルパー関数（ルビ、音声読み上げ精度向上）
+        // 2. ヘルパー関数（ルビ、mp3音声再生）
         // ==========================================
         function formatRuby(text) {
             if (!text) return '';
             return text.replace(/\[([^:]+):([^\]]+)\]/g, '<ruby class="mx-[1px]">$1<rt class="text-[0.55em] text-stone-500 font-sans tracking-tighter leading-none">$2</rt></ruby>');
         }
 
-        // 読み上げ専用のテキスト（ひらがな）を、音声エンジンが自然な間隔で読めるように調整
-        function speakText(yomiText) {
-            if (!('speechSynthesis' in window) || !yomiText) return;
-            window.speechSynthesis.cancel();
-            
-            // スペースを読点（、）に変換して、適切なポーズ（間）を空けながら読ませる
-            const naturalReading = yomiText.replace(/ /g, '、');
-            
-            const utterance = new SpeechSynthesisUtterance(naturalReading);
-            utterance.lang = 'ja-JP';
-            utterance.rate = 0.85; // 少しゆっくりめに設定
-            window.speechSynthesis.speak(utterance);
+        // 時間文字列("MM:SS")を秒数に変換
+        function parseTime(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
         }
+
+        // --- mp3再生用 ---
+        let audioPlayer = null;
+        let playbackTimer = null;
+
+        function initAudio() {
+            if (!audioPlayer) {
+                audioPlayer = new Audio('100ishu.mp3');
+            }
+        }
+
+        // 指定した歌(poemId)の 'kami'(上の句) または 'shimo'(下の句) を再生する
+        function playAudioSegment(poemId, type) {
+            initAudio();
+            const poem = POEMS.find(p => p.id === poemId);
+            if (!poem) return;
+
+            // 前の再生をキャンセル
+            audioPlayer.pause();
+            clearTimeout(playbackTimer);
+
+            const startTime = parseTime(type === 'kami' ? poem.kamiTime : poem.shimoTime);
+            let duration = 0;
+
+            if (type === 'kami') {
+                // 上の句の再生時間 = 下の句が始まるまでの時間
+                duration = parseTime(poem.shimoTime) - startTime;
+            } else {
+                // 下の句の再生時間 = 次の歌が始まるまでの時間
+                if (poemId < 100) {
+                    const nextPoem = POEMS.find(p => p.id === poemId + 1);
+                    duration = parseTime(nextPoem.kamiTime) - startTime;
+                } else {
+                    duration = 10; // 100首目の下の句は10秒間
+                }
+                // 間が長すぎる場合はクリップ（最大12秒程度）
+                if (duration > 12) duration = 12;
+            }
+
+            audioPlayer.currentTime = startTime;
+            audioPlayer.play().catch(e => console.error("Audio playback failed (ブラウザの自動再生制限の可能性があります):", e));
+
+            // 指定秒数後に一時停止
+            playbackTimer = setTimeout(() => {
+                audioPlayer.pause();
+            }, duration * 1000);
+        }
+
+        function stopAudio() {
+            if (audioPlayer) audioPlayer.pause();
+            clearTimeout(playbackTimer);
+        }
+
 
         // ==========================================
         // 3. アプリケーション本体（State & ロジック）
@@ -214,8 +261,8 @@
         const app = {
             state: {
                 currentView: 'home',
-                learnRange: '1-10',   // ★ 覚えるモードの範囲指定（初期値1〜10首）
-                practiceRange: '1-100', // 練習モードの範囲指定
+                learnRange: '1-10',   
+                practiceRange: '1-100', 
                 stats: {
                     memorized: [],
                     practiceScores: 0,
@@ -243,17 +290,15 @@
             },
 
             goTo(view) {
-                window.speechSynthesis.cancel();
+                stopAudio();
                 clearTimeout(this.cpuTimer);
                 this.state.currentView = view;
                 this.render();
             },
 
-            // ★ render時にスクロール位置を保持できるように引数を追加
             render(keepScroll = false) {
                 const root = document.getElementById('app');
                 
-                // 現在のスクロール位置を取得
                 let scrollPos = 0;
                 if (keepScroll) {
                     const scrollContainer = root.querySelector('.overflow-y-auto') || root;
@@ -274,7 +319,6 @@
                 
                 root.innerHTML = headerHTML + this.views[this.state.currentView]();
                 
-                // 描画後、スクロール位置を復元（またはトップに戻す）
                 setTimeout(() => { 
                     const newScrollContainer = root.querySelector('.overflow-y-auto') || root;
                     if (newScrollContainer) {
@@ -336,7 +380,7 @@
                                         <div class="absolute -bottom-4 -right-4 text-7xl text-orange-50 opacity-50 group-hover:scale-110 transition-transform"><i class="fa-solid fa-scroll"></i></div>
                                         <div class="text-orange-700 mb-4 text-4xl"><i class="fa-solid fa-scroll"></i></div>
                                         <h2 class="text-2xl font-bold mb-2 tracking-widest">練習する</h2>
-                                        <p class="text-stone-500 text-sm text-center font-sans">音声読み上げ付き<br>ランダム五問テスト</p>
+                                        <p class="text-stone-500 text-sm text-center font-sans">MP3音声読み上げ付き<br>ランダム五問テスト</p>
                                     </button>
                                     
                                     <button onclick="app.goTo('battleMenu')" class="bg-stone-800 text-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all border border-stone-900 flex flex-col items-center group relative overflow-hidden">
@@ -352,16 +396,14 @@
                     `;
                 },
 
-                // ① 覚えるモード（10首ごとの範囲指定＆裏面表示改善）
+                // ① 覚えるモード
                 learn() {
                     const s = app.state.learn;
                     const flipped = s.flippedCards;
                     
-                    // 範囲の絞り込み
                     const [min, max] = app.state.learnRange.split('-').map(Number);
                     const filteredPoems = POEMS.filter(p => p.id >= min && p.id <= max);
 
-                    // ★ 10首ごとの選択ボタンを生成
                     const ranges = [
                         {label: '1-', val: '1-10'}, {label: '11-', val: '11-20'},
                         {label: '21-', val: '21-30'}, {label: '31-', val: '31-40'},
@@ -391,7 +433,6 @@
                                     </p>
                                 ` : `
                                     <div class="flex flex-col h-full w-full justify-between animate-pop pt-1">
-                                        <!-- ★ 右に上の句、左に下の句を並べる (flex-row-reverseを使用) -->
                                         <div class="flex flex-row-reverse justify-center gap-1 sm:gap-2 h-full overflow-hidden">
                                             <p class="vertical-rl font-serif text-[10px] sm:text-xs lg:text-sm leading-[1.3] tracking-[0.1em] text-stone-600">
                                                 ${formatRuby(poem.kami)}
@@ -429,7 +470,7 @@
                     `;
                 },
 
-                // ②-A 練習メニュー（範囲設定ボタン化）
+                // ②-A 練習メニュー
                 practiceMenu() {
                     const ranges = [
                         {label: '1-10首', val: '1-10'}, {label: '11-20首', val: '11-20'},
@@ -442,7 +483,6 @@
                     
                     let rangeButtons = ranges.map((r, idx) => {
                         const isSelected = app.state.practiceRange === r.val;
-                        // 最後の全首ボタンだけ幅を広くする
                         const colSpan = idx === 10 ? 'col-span-2 sm:col-span-4' : 'col-span-1 sm:col-span-2';
                         return `
                             <button onclick="app.state.practiceRange = '${r.val}'; app.render();" class="${colSpan} py-2 px-1 text-xs sm:text-sm font-bold rounded ${isSelected ? 'bg-orange-600 text-white shadow-inner' : 'bg-orange-100 text-orange-800 hover:bg-orange-200'} transition-colors">
@@ -458,7 +498,6 @@
                                 <h2 class="text-2xl font-bold mb-6 font-serif tracking-widest">練習範囲の設定</h2>
                                 <div class="mb-6 text-left">
                                     <label class="block text-sm font-bold text-stone-600 mb-3 font-sans">出題範囲</label>
-                                    <!-- ★ プルダウンからボタン一覧に変更 -->
                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                         ${rangeButtons}
                                     </div>
@@ -496,7 +535,7 @@
                             </div>
                             
                             <div class="bg-white p-6 md:p-10 rounded shadow-md text-center mb-6 relative min-h-[160px] flex flex-col justify-center border-t-4 border-stone-800">
-                                <button onclick="speakText('${q.yomiKami}')" class="absolute top-4 right-4 p-3 bg-stone-100 text-stone-600 rounded-full hover:bg-stone-200 shadow-sm transition-colors" title="もう一度聞く">
+                                <button onclick="playAudioSegment(${q.id}, 'kami')" class="absolute top-4 right-4 p-3 bg-stone-100 text-stone-600 rounded-full hover:bg-stone-200 shadow-sm transition-colors" title="もう一度聞く">
                                     <i class="fa-solid fa-volume-high"></i>
                                 </button>
                                 <p class="text-xs text-stone-400 mb-2 font-sans font-bold tracking-widest">上の句</p>
@@ -790,19 +829,20 @@
                 
                 this.state.practice = { questions: qs, currentIndex: 0, score: 0, selectedAnswer: null, isCorrect: null, isFinished: false };
                 this.goTo('practice');
-                setTimeout(() => speakText(qs[0].yomiKami), 500);
+                
+                // ★ 自動音声ではなくMP3から上の句を再生
+                setTimeout(() => playAudioSegment(qs[0].id, 'kami'), 500);
             },
             actionPractice(option) {
                 const s = this.state.practice;
                 if(s.selectedAnswer !== null) return;
                 
-                window.speechSynthesis.cancel();
                 s.selectedAnswer = option;
                 s.isCorrect = (option === s.questions[s.currentIndex].shimo);
                 if(s.isCorrect) s.score++;
 
-                // 正解の下の句を正確な発音で読み上げる
-                speakText(s.questions[s.currentIndex].yomiShimo);
+                // ★ 正解の下の句をMP3から再生
+                playAudioSegment(s.questions[s.currentIndex].id, 'shimo');
                 this.render();
 
                 setTimeout(() => {
@@ -811,7 +851,8 @@
                         s.selectedAnswer = null;
                         s.isCorrect = null;
                         this.render();
-                        speakText(s.questions[s.currentIndex].yomiKami);
+                        // 次の上の句を再生
+                        playAudioSegment(s.questions[s.currentIndex].id, 'kami');
                     } else {
                         s.isFinished = true;
                         this.state.stats.practiceScores += s.score;
@@ -819,7 +860,7 @@
                         this.saveStats();
                         this.render();
                     }
-                }, 2000);
+                }, 2000); // 読み上げ時間に合わせて少し待つ
             },
 
             // CPU対戦モード
@@ -842,12 +883,14 @@
                     return;
                 }
                 s.hands = [];
-                s.playerMissed = false; // お手つきフラグをリセット
+                s.playerMissed = false; 
                 s.currentPoem = s.deck.shift();
                 s.gameState = 'playing';
                 s.message = '詠み上げ中...';
                 this.render();
-                speakText(s.currentPoem.yomiKami);
+                
+                // ★ 上の句をMP3から再生
+                playAudioSegment(s.currentPoem.id, 'kami');
 
                 const levelData = CPU_LEVELS.find(l => l.level === s.level);
                 const reactionTime = Math.floor(Math.random() * (levelData.speedMax - levelData.speedMin)) + levelData.speedMin;
@@ -860,7 +903,6 @@
                 const s = this.state.battleCpu;
                 if(s.gameState !== 'playing') return;
                 
-                // ユーザーがすでにお手つきしている場合はロック
                 if(s.playerMissed) return;
                 
                 const isCorrect = cardId === s.currentPoem.id;
@@ -868,21 +910,20 @@
 
                 if(isCorrect) {
                     clearTimeout(this.cpuTimer);
-                    window.speechSynthesis.cancel();
                     s.scoreP++;
                     s.message = '見事！あなたが取りました。';
                     s.gameState = 'round_end';
                     this.render(); 
                     
-                    // 正解の下の句を読み上げる
-                    speakText(s.currentPoem.yomiShimo);
+                    // ★ 正解の下の句をMP3から再生
+                    playAudioSegment(s.currentPoem.id, 'shimo');
                     
                     setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundCpu();
-                    }, 2000); // 読み上げのため遷移時間を少し延長
+                    }, 2500); 
                 } else {
-                    s.playerMissed = true; // お手つきフラグをON
+                    s.playerMissed = true; 
                     s.message = 'お手つき！CPUの動きを待ちます...';
                     this.render(); 
                     
@@ -894,20 +935,19 @@
             },
             actionCpuTakes() {
                 const s = this.state.battleCpu;
-                window.speechSynthesis.cancel();
                 s.scoreC++;
                 s.message = 'CPUに取られました！';
                 s.gameState = 'round_end';
                 s.hands.push({ cardId: s.currentPoem.id, isCorrect: true, player: 'cpu' });
                 this.render();
 
-                // 正解の下の句を読み上げる
-                speakText(s.currentPoem.yomiShimo);
+                // ★ 正解の下の句をMP3から再生
+                playAudioSegment(s.currentPoem.id, 'shimo');
 
                 setTimeout(() => {
                     s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                     this.nextRoundCpu();
-                }, 2000); // 読み上げのため遷移時間を少し延長
+                }, 2500); 
             },
 
             // 2人対戦（ローカル）モード
@@ -934,7 +974,9 @@
                 s.gameState = 'playing';
                 s.message = '詠み上げ中...';
                 this.render();
-                speakText(s.currentPoem.yomiKami);
+                
+                // ★ 上の句をMP3から再生
+                playAudioSegment(s.currentPoem.id, 'kami');
             },
             actionBattleLocal(pNum, cardId) {
                 const s = this.state.battleLocal;
@@ -945,20 +987,19 @@
                 s.hands.push({ cardId: cardId, isCorrect: isCorrect, player: `p${pNum}` });
 
                 if(isCorrect) {
-                    window.speechSynthesis.cancel();
                     if(pNum === 1) { s.scoreP1++; s.message = "P1 (下側) が取りました！"; }
                     else { s.scoreP2++; s.message = "P2 (上側) が取りました！"; }
                     
                     s.gameState = 'round_end';
                     this.render();
 
-                    // 正解の下の句を読み上げる
-                    speakText(s.currentPoem.yomiShimo);
+                    // ★ 正解の下の句をMP3から再生
+                    playAudioSegment(s.currentPoem.id, 'shimo');
 
                     setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundLocal();
-                    }, 2000); // 読み上げのため遷移時間を少し延長
+                    }, 2500);
 
                 } else {
                     if(pNum === 1) s.p1Missed = true;
@@ -970,20 +1011,18 @@
                         s.hands = s.hands.filter(h => !(h.cardId === cardId && h.player === `p${pNum}`));
                         
                         if(s.p1Missed && s.p2Missed) {
-                            // 両者お手つき時の処理
-                            window.speechSynthesis.cancel();
                             s.gameState = 'round_end';
                             s.message = "両者お手つき！正解はこちら";
                             s.highlightId = s.currentPoem.id;
                             this.render();
                             
-                            // 正解の下の句を読み上げる
-                            speakText(s.currentPoem.yomiShimo);
+                            // ★ 正解の下の句をMP3から再生
+                            playAudioSegment(s.currentPoem.id, 'shimo');
                             
                             setTimeout(() => {
                                 s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                                 this.nextRoundLocal();
-                            }, 3500); // 読み上げが終わるように少し長めに待つ
+                            }, 4000); 
                         } else {
                             this.render();
                         }
