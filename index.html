@@ -74,7 +74,6 @@
     <script>
         // ==========================================
         // 1. データ定義（百人一首 全100首）
-        // ※読み上げエラーを防ぐため、yomiKami / yomiShimo に現代の自然な発音を事前定義しています
         // ==========================================
         const POEMS = [
             { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの", yomiKami:"あきのたの かりおのいおの とまおあらみ", yomiShimo:"わがころもでわ つゆにぬれつつ" },
@@ -98,7 +97,7 @@
             { id:19, creator:"[伊勢:いせ]", kami:"難波潟 みじかき芦の ふしの間も", shimo:"逢はでこの世を 過ぐしてよとや", kimari:"なにわが", yomiKami:"なにわがた みじかきあしの ふしのまも", yomiShimo:"あわでこのよお すぐしてよとや" },
             { id:20, creator:"[元良親王:もとよししんのう]", kami:"わびぬれば 今はた同じ 難波なる", shimo:"みをつくしても 逢はむとぞ思ふ", kimari:"わび", yomiKami:"わびぬれば いまわたおなじ なにわなる", yomiShimo:"みおつくしても あわんとぞおもう" },
             { id:21, creator:"[素性法師:そせいほうし]", kami:"今来むと いひしばかりに 長月の", shimo:"有明の月を 待ち出でつるかな", kimari:"いまこ", yomiKami:"いまこんと いいしばかりに ながつきの", yomiShimo:"ありあけのつきお まちいでつるかな" },
-            { id:22, creator:"[文屋康秀:ふんやのやすひde]", kami:"吹くからに 秋の草木の しをるれば", shimo:"むべ山風を 嵐といふらむ", kimari:"ふく", yomiKami:"ふくからに あきのくさきの しおるれば", yomiShimo:"むべやまかぜお あらしというらん" },
+            { id:22, creator:"[文屋康秀:ふんやのやすひで]", kami:"吹くからに 秋の草木の しをるれば", shimo:"むべ山風を 嵐といふらむ", kimari:"ふく", yomiKami:"ふくからに あきのくさきの しおるれば", yomiShimo:"むべやまかぜお あらしというらん" },
             { id:23, creator:"[大江千里:おおえのちさと]", kami:"月見れば 千々に物こそ 悲しけれ", shimo:"わが身一つの 秋にはあらねど", kimari:"つき", yomiKami:"つきみれば ちじにものこそ かなしけれ", yomiShimo:"わがみひとつの あきにわあらねど" },
             { id:24, creator:"[菅家:かんけ]", kami:"このたびは 幣もとりあへず 手向山", shimo:"紅葉の錦 神のまにまに", kimari:"この", yomiKami:"このたびわ ぬさもとりあえず たむけやま", yomiShimo:"もみじのにしき かみのまにまに" },
             { id:25, creator:"[三条右大臣:さんじょうのうだいじん]", kami:"名にし負はば 逢坂山の さねかづら", shimo:"人に知られで くるよしもがな", kimari:"なにし", yomiKami:"なにしおわば おうさかやまの さねかずら", yomiShimo:"ひとにしられで くるよしもがな" },
@@ -215,7 +214,7 @@
         const app = {
             state: {
                 currentView: 'home',
-                learnRange: '1-20',   // 覚えるモードの範囲指定
+                learnRange: '1-10',   // ★ 覚えるモードの範囲指定（初期値1〜10首）
                 practiceRange: '1-100', // 練習モードの範囲指定
                 stats: {
                     memorized: [],
@@ -250,10 +249,16 @@
                 this.render();
             },
 
-            render() {
+            // ★ render時にスクロール位置を保持できるように引数を追加
+            render(keepScroll = false) {
                 const root = document.getElementById('app');
-                // DOM再構築によるスクロール位置のリセットを防ぐため、現在のスクロール位置を記憶
-                const scrollPos = root.scrollTop; 
+                
+                // 現在のスクロール位置を取得
+                let scrollPos = 0;
+                if (keepScroll) {
+                    const scrollContainer = root.querySelector('.overflow-y-auto') || root;
+                    scrollPos = scrollContainer.scrollTop;
+                }
                 
                 let headerHTML = '';
                 const titles = { 'learn':'覚える（百首一覧）', 'practiceMenu':'練習設定', 'practice':'練習モード', 'battleMenu':'対戦メニュー', 'battleCpu':'CPU対戦', 'battleLocal':'2人対戦' };
@@ -269,8 +274,13 @@
                 
                 root.innerHTML = headerHTML + this.views[this.state.currentView]();
                 
-                // 描画後、即座にスクロール位置を復元する
-                setTimeout(() => { root.scrollTop = scrollPos; }, 0);
+                // 描画後、スクロール位置を復元（またはトップに戻す）
+                setTimeout(() => { 
+                    const newScrollContainer = root.querySelector('.overflow-y-auto') || root;
+                    if (newScrollContainer) {
+                        newScrollContainer.scrollTop = keepScroll ? scrollPos : 0;
+                    }
+                }, 0);
             },
 
             // ==========================================
@@ -342,7 +352,7 @@
                     `;
                 },
 
-                // ① 覚えるモード（範囲指定付き）
+                // ① 覚えるモード（10首ごとの範囲指定＆裏面表示改善）
                 learn() {
                     const s = app.state.learn;
                     const flipped = s.flippedCards;
@@ -350,6 +360,21 @@
                     // 範囲の絞り込み
                     const [min, max] = app.state.learnRange.split('-').map(Number);
                     const filteredPoems = POEMS.filter(p => p.id >= min && p.id <= max);
+
+                    // ★ 10首ごとの選択ボタンを生成
+                    const ranges = [
+                        {label: '1-', val: '1-10'}, {label: '11-', val: '11-20'},
+                        {label: '21-', val: '21-30'}, {label: '31-', val: '31-40'},
+                        {label: '41-', val: '41-50'}, {label: '51-', val: '51-60'},
+                        {label: '61-', val: '61-70'}, {label: '71-', val: '71-80'},
+                        {label: '81-', val: '81-90'}, {label: '91-', val: '91-100'},
+                        {label: '全首', val: '1-100'}
+                    ];
+                    let rangeButtonsHTML = ranges.map(r => `
+                        <button onclick="app.state.learnRange = '${r.val}'; app.render();" class="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-bold rounded whitespace-nowrap ${app.state.learnRange === r.val ? 'bg-stone-800 text-white' : 'bg-stone-200 text-stone-700 hover:bg-stone-300'} transition-colors">
+                            ${r.label}
+                        </button>
+                    `).join('');
 
                     let cardsHTML = filteredPoems.map(poem => {
                         const isMemorized = app.state.stats.memorized.includes(poem.id);
@@ -365,11 +390,17 @@
                                         ${formatRuby(poem.kami)}
                                     </p>
                                 ` : `
-                                    <div class="flex flex-col h-full w-full justify-between animate-pop">
-                                        <p class="vertical-rl font-serif text-sm sm:text-base lg:text-lg leading-[2] tracking-[0.2em] text-red-800 mx-auto mt-2">
-                                            ${formatRuby(poem.shimo)}
-                                        </p>
-                                        <button onclick="event.stopPropagation(); app.toggleMemorized(${poem.id})" class="mt-2 w-full py-2 ${isMemorized ? 'bg-stone-200 text-stone-500' : 'bg-emerald-600 text-white'} rounded text-xs font-bold shadow-sm active:scale-95 transition-colors">
+                                    <div class="flex flex-col h-full w-full justify-between animate-pop pt-1">
+                                        <!-- ★ 右に上の句、左に下の句を並べる (flex-row-reverseを使用) -->
+                                        <div class="flex flex-row-reverse justify-center gap-1 sm:gap-2 h-full overflow-hidden">
+                                            <p class="vertical-rl font-serif text-[10px] sm:text-xs lg:text-sm leading-[1.3] tracking-[0.1em] text-stone-600">
+                                                ${formatRuby(poem.kami)}
+                                            </p>
+                                            <p class="vertical-rl font-serif text-[10px] sm:text-xs lg:text-sm leading-[1.3] tracking-[0.1em] text-red-800 font-bold">
+                                                ${formatRuby(poem.shimo)}
+                                            </p>
+                                        </div>
+                                        <button onclick="event.stopPropagation(); app.toggleMemorized(${poem.id})" class="mt-1 w-full py-1.5 ${isMemorized ? 'bg-stone-200 text-stone-500' : 'bg-emerald-600 text-white'} rounded text-[10px] sm:text-xs font-bold shadow-sm active:scale-95 transition-colors shrink-0">
                                             ${isMemorized ? '外す' : '覚えた！'}
                                         </button>
                                     </div>
@@ -381,19 +412,14 @@
                     return `
                         <div class="flex-1 tatami-bg p-3 sm:p-4 overflow-y-auto">
                             <div class="max-w-6xl mx-auto">
-                                <div class="bg-white/90 backdrop-blur-sm p-3 rounded shadow-sm mb-4 flex flex-col sm:flex-row justify-between items-center gap-2 sticky top-0 z-20 border-l-4 border-stone-800">
-                                    <div class="flex items-center gap-2">
+                                <div class="bg-white/90 backdrop-blur-sm p-3 rounded shadow-sm mb-4 sticky top-0 z-20 border-l-4 border-stone-800 flex flex-col gap-3">
+                                    <div class="flex justify-between items-center">
                                         <span class="font-bold text-stone-700 font-serif whitespace-nowrap">表示範囲</span>
-                                        <select class="p-1 border border-stone-300 rounded font-bold font-sans text-sm focus:outline-none focus:border-stone-500" onchange="app.state.learnRange = this.value; app.render();">
-                                            <option value="1-20" ${app.state.learnRange === '1-20' ? 'selected' : ''}>1〜20首</option>
-                                            <option value="21-40" ${app.state.learnRange === '21-40' ? 'selected' : ''}>21〜40首</option>
-                                            <option value="41-60" ${app.state.learnRange === '41-60' ? 'selected' : ''}>41〜60首</option>
-                                            <option value="61-80" ${app.state.learnRange === '61-80' ? 'selected' : ''}>61〜80首</option>
-                                            <option value="81-100" ${app.state.learnRange === '81-100' ? 'selected' : ''}>81〜100首</option>
-                                            <option value="1-100" ${app.state.learnRange === '1-100' ? 'selected' : ''}>全首表示（1〜100）</option>
-                                        </select>
+                                        <span class="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
                                     </div>
-                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
+                                    <div class="flex flex-wrap gap-1 sm:gap-2">
+                                        ${rangeButtonsHTML}
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 pb-10">
                                     ${cardsHTML}
@@ -403,30 +429,41 @@
                     `;
                 },
 
-                // ②-A 練習メニュー（範囲設定）
+                // ②-A 練習メニュー（範囲設定ボタン化）
                 practiceMenu() {
+                    const ranges = [
+                        {label: '1-10首', val: '1-10'}, {label: '11-20首', val: '11-20'},
+                        {label: '21-30首', val: '21-30'}, {label: '31-40首', val: '31-40'},
+                        {label: '41-50首', val: '41-50'}, {label: '51-60首', val: '51-60'},
+                        {label: '61-70首', val: '61-70'}, {label: '71-80首', val: '71-80'},
+                        {label: '81-90首', val: '81-90'}, {label: '91-100首', val: '91-100'},
+                        {label: '全首(1-100)', val: '1-100'}
+                    ];
+                    
+                    let rangeButtons = ranges.map((r, idx) => {
+                        const isSelected = app.state.practiceRange === r.val;
+                        // 最後の全首ボタンだけ幅を広くする
+                        const colSpan = idx === 10 ? 'col-span-2 sm:col-span-4' : 'col-span-1 sm:col-span-2';
+                        return `
+                            <button onclick="app.state.practiceRange = '${r.val}'; app.render();" class="${colSpan} py-2 px-1 text-xs sm:text-sm font-bold rounded ${isSelected ? 'bg-orange-600 text-white shadow-inner' : 'bg-orange-100 text-orange-800 hover:bg-orange-200'} transition-colors">
+                                ${r.label}
+                            </button>
+                        `;
+                    }).join('');
+
                     return `
-                        <div class="flex-1 wagara-bg flex items-center justify-center p-6">
-                            <div class="bg-white p-8 rounded shadow text-center border-t-4 border-orange-600 max-w-md w-full">
+                        <div class="flex-1 wagara-bg flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+                            <div class="bg-white p-6 sm:p-8 rounded shadow text-center border-t-4 border-orange-600 max-w-md w-full">
                                 <i class="fa-solid fa-scroll text-5xl text-orange-700 mb-4"></i>
                                 <h2 class="text-2xl font-bold mb-6 font-serif tracking-widest">練習範囲の設定</h2>
                                 <div class="mb-6 text-left">
-                                    <label class="block text-sm font-bold text-stone-600 mb-2 font-sans">出題範囲</label>
-                                    <select class="w-full p-3 border border-stone-300 rounded font-bold font-sans focus:outline-none focus:border-orange-500" onchange="app.state.practiceRange = this.value">
-                                        <option value="1-100" ${app.state.practiceRange === '1-100' ? 'selected' : ''}>全首（1〜100）</option>
-                                        <option value="1-10" ${app.state.practiceRange === '1-10' ? 'selected' : ''}>1〜10首</option>
-                                        <option value="11-20" ${app.state.practiceRange === '11-20' ? 'selected' : ''}>11〜20首</option>
-                                        <option value="21-30" ${app.state.practiceRange === '21-30' ? 'selected' : ''}>21〜30首</option>
-                                        <option value="31-40" ${app.state.practiceRange === '31-40' ? 'selected' : ''}>31〜40首</option>
-                                        <option value="41-50" ${app.state.practiceRange === '41-50' ? 'selected' : ''}>41〜50首</option>
-                                        <option value="51-60" ${app.state.practiceRange === '51-60' ? 'selected' : ''}>51〜60首</option>
-                                        <option value="61-70" ${app.state.practiceRange === '61-70' ? 'selected' : ''}>61〜70首</option>
-                                        <option value="71-80" ${app.state.practiceRange === '71-80' ? 'selected' : ''}>71〜80首</option>
-                                        <option value="81-90" ${app.state.practiceRange === '81-90' ? 'selected' : ''}>81〜90首</option>
-                                        <option value="91-100" ${app.state.practiceRange === '91-100' ? 'selected' : ''}>91〜100首</option>
-                                    </select>
+                                    <label class="block text-sm font-bold text-stone-600 mb-3 font-sans">出題範囲</label>
+                                    <!-- ★ プルダウンからボタン一覧に変更 -->
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        ${rangeButtons}
+                                    </div>
                                 </div>
-                                <button onclick="app.startPractice()" class="bg-orange-700 text-white px-8 py-3 rounded shadow hover:bg-orange-800 font-bold tracking-widest w-full transition-colors">練習開始</button>
+                                <button onclick="app.startPractice()" class="bg-orange-700 text-white px-8 py-3 rounded shadow hover:bg-orange-800 font-bold tracking-widest w-full transition-colors mt-2">練習開始</button>
                             </div>
                         </div>
                     `;
@@ -718,7 +755,7 @@
                 } else {
                     this.state.learn.flippedCards.add(id);
                 }
-                this.render();
+                this.render(true); // ★ trueを渡してスクロール位置を保持
             },
             toggleMemorized(id) {
                 const s = this.state.stats;
@@ -729,7 +766,7 @@
                 }
                 this.saveStats();
                 this.state.learn.flippedCards.delete(id);
-                this.render();
+                this.render(true); // ★ trueを渡してスクロール位置を保持
             },
 
             // 練習モード
@@ -823,7 +860,7 @@
                 const s = this.state.battleCpu;
                 if(s.gameState !== 'playing') return;
                 
-                // ★ ユーザーがすでにお手つきしている場合はロック
+                // ユーザーがすでにお手つきしている場合はロック
                 if(s.playerMissed) return;
                 
                 const isCorrect = cardId === s.currentPoem.id;
@@ -837,7 +874,7 @@
                     s.gameState = 'round_end';
                     this.render(); 
                     
-                    // ★ 正解の下の句を読み上げる
+                    // 正解の下の句を読み上げる
                     speakText(s.currentPoem.yomiShimo);
                     
                     setTimeout(() => {
@@ -845,7 +882,7 @@
                         this.nextRoundCpu();
                     }, 2000); // 読み上げのため遷移時間を少し延長
                 } else {
-                    s.playerMissed = true; // ★ お手つきフラグをON
+                    s.playerMissed = true; // お手つきフラグをON
                     s.message = 'お手つき！CPUの動きを待ちます...';
                     this.render(); 
                     
@@ -864,7 +901,7 @@
                 s.hands.push({ cardId: s.currentPoem.id, isCorrect: true, player: 'cpu' });
                 this.render();
 
-                // ★ 正解の下の句を読み上げる
+                // 正解の下の句を読み上げる
                 speakText(s.currentPoem.yomiShimo);
 
                 setTimeout(() => {
@@ -915,7 +952,7 @@
                     s.gameState = 'round_end';
                     this.render();
 
-                    // ★ 正解の下の句を読み上げる
+                    // 正解の下の句を読み上げる
                     speakText(s.currentPoem.yomiShimo);
 
                     setTimeout(() => {
@@ -933,14 +970,14 @@
                         s.hands = s.hands.filter(h => !(h.cardId === cardId && h.player === `p${pNum}`));
                         
                         if(s.p1Missed && s.p2Missed) {
-                            // ★ 両者お手つき時の処理
+                            // 両者お手つき時の処理
                             window.speechSynthesis.cancel();
                             s.gameState = 'round_end';
                             s.message = "両者お手つき！正解はこちら";
                             s.highlightId = s.currentPoem.id;
                             this.render();
                             
-                            // ★ 正解の下の句を読み上げる
+                            // 正解の下の句を読み上げる
                             speakText(s.currentPoem.yomiShimo);
                             
                             setTimeout(() => {
