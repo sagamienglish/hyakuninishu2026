@@ -74,7 +74,6 @@
     <script>
         // ==========================================
         // 1. データ定義（百人一首 全100首）
-        // ※英単語カルタにする場合は、kamiに英語、shimoに日本語を入れて応用できます。
         // ==========================================
         const POEMS = [
             { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの" },
@@ -188,16 +187,38 @@
         ];
 
         // ==========================================
-        // 2. ヘルパー関数（ルビ、音声）
+        // 2. ヘルパー関数（ルビ、音声読み上げ精度向上）
         // ==========================================
         function formatRuby(text) {
             if (!text) return '';
             return text.replace(/\[([^:]+):([^\]]+)\]/g, '<ruby class="mx-[1px]">$1<rt class="text-[0.55em] text-stone-500 font-sans tracking-tighter leading-none">$2</rt></ruby>');
         }
 
+        // 音声エンジンが正しく読めるよう、歴史的仮名遣いや助詞を現代語風に変換する
         function getReadingText(text) {
             if (!text) return '';
-            return text.replace(/\[([^:]+):([^\]]+)\]/g, '$2');
+            // ルビの部分（ふりがな）だけを抽出
+            let reading = text.replace(/\[([^:]+):([^\]]+)\]/g, '$2');
+            
+            // ポーズ（間）をとるためスペースを読点に変換
+            reading = reading.replace(/ /g, '、');
+
+            // 百人一首によくある歴史的仮名遣いや特殊な読みを変換するルール
+            const rules = [
+                [/てふ/g, 'ちょう'], [/けふ/g, 'きょう'], [/あふ/g, 'おう'], [/いふ/g, 'いう'], 
+                [/ゑ/g, 'え'], [/ゐ/g, 'い'], [/を/g, 'お'], [/ぢ/g, 'じ'], [/づ/g, 'ず'],
+                [/にほひ/g, 'におい'], [/おもひ/g, 'おもい'], [/あはれ/g, 'あわれ'],
+                [/ゆゑ/g, 'ゆえ'], [/しを/g, 'しお'], [/かへ/g, 'かえ'], [/たへ/g, 'たえ'],
+                [/らむ/g, 'らん'], [/けむ/g, 'けん'], [/なむ/g, 'なん'], [/ねむ/g, 'ねん'],
+                [/は、/g, 'わ、'], [/へ、/g, 'え、'], // スペース（読点）直前の助詞
+                [/は$/g, 'わ'], [/へ$/g, 'え']        // 文末の助詞
+            ];
+
+            rules.forEach(([pattern, replacement]) => {
+                reading = reading.replace(pattern, replacement);
+            });
+
+            return reading;
         }
 
         function speakText(text) {
@@ -769,7 +790,10 @@
             startBattleCpu(level) {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
                 const matchDeck = shuffled.slice(0, 20);
-                this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [] };
+                // 盤面の配置順をデッキ順とは独立させてランダムにする
+                const boardCards = [...matchDeck].sort(() => 0.5 - Math.random());
+                
+                this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: boardCards, currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [] };
                 this.goTo('battleCpu');
             },
             nextRoundCpu() {
@@ -844,7 +868,10 @@
             startBattleLocal() {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
                 const matchDeck = shuffled.slice(0, 20); 
-                this.state.battleLocal = { gameState: 'ready', deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '中央の開始ボタンを押してください', hands: [], p1Missed: false, p2Missed: false, highlightId: null };
+                // 盤面の配置順をデッキ順とは独立させてランダムにする
+                const boardCards = [...matchDeck].sort(() => 0.5 - Math.random());
+                
+                this.state.battleLocal = { gameState: 'ready', deck: matchDeck, board: boardCards, currentPoem: null, scoreP1: 0, scoreP2: 0, message: '中央の開始ボタンを押してください', hands: [], p1Missed: false, p2Missed: false, highlightId: null };
                 this.goTo('battleLocal');
             },
             nextRoundLocal() {
