@@ -194,29 +194,35 @@
             return text.replace(/\[([^:]+):([^\]]+)\]/g, '<ruby class="mx-[1px]">$1<rt class="text-[0.55em] text-stone-500 font-sans tracking-tighter leading-none">$2</rt></ruby>');
         }
 
-        // 音声エンジンが正しく読めるよう、歴史的仮名遣いや助詞を現代語風に変換する
+        // 音声エンジンが正しく読めるよう、歴史的仮名遣いや助詞を現代語風に強力に変換する
         function getReadingText(text) {
             if (!text) return '';
             // ルビの部分（ふりがな）だけを抽出
             let reading = text.replace(/\[([^:]+):([^\]]+)\]/g, '$2');
             
-            // ポーズ（間）をとるためスペースを読点に変換
-            reading = reading.replace(/ /g, '、');
-
-            // 百人一首によくある歴史的仮名遣いや特殊な読みを変換するルール
+            // 百人一首によくある歴史的仮名遣いや助詞、特殊な読みを変換するルール
             const rules = [
-                [/てふ/g, 'ちょう'], [/けふ/g, 'きょう'], [/あふ/g, 'おう'], [/いふ/g, 'いう'], 
-                [/ゑ/g, 'え'], [/ゐ/g, 'い'], [/を/g, 'お'], [/ぢ/g, 'じ'], [/づ/g, 'ず'],
+                [/てふ/g, 'ちょう'], [/けふ/g, 'きょう'], [/あふ/g, 'おう'], [/いふ/g, 'いう'], [/よふ/g, 'よう'],
+                [/ゐ/g, 'い'], [/ゑ/g, 'え'], 
+                [/ぢ/g, 'じ'], [/づ/g, 'ず'],
                 [/にほひ/g, 'におい'], [/おもひ/g, 'おもい'], [/あはれ/g, 'あわれ'],
                 [/ゆゑ/g, 'ゆえ'], [/しを/g, 'しお'], [/かへ/g, 'かえ'], [/たへ/g, 'たえ'],
                 [/らむ/g, 'らん'], [/けむ/g, 'けん'], [/なむ/g, 'なん'], [/ねむ/g, 'ねん'],
-                [/は、/g, 'わ、'], [/へ、/g, 'え、'], // スペース（読点）直前の助詞
-                [/は$/g, 'わ'], [/へ$/g, 'え']        // 文末の助詞
+                
+                // 助詞の強制変換（スペースの直前や文末にある「は・へ・を」）
+                [/は /g, 'わ、'], [/へ /g, 'え、'], [/を /g, 'お、'],
+                [/は$/g, 'わ'], [/へ$/g, 'え'], [/を$/g, 'お'],
+                
+                // 百人一首特有の読みの調整
+                [/かりほ/g, 'かりお'], [/なほ/g, 'なお'], [/えやは/g, 'えやわ'], [/かは /g, 'かわ、']
             ];
 
             rules.forEach(([pattern, replacement]) => {
                 reading = reading.replace(pattern, replacement);
             });
+            
+            // ポーズ（間）をとるため残ったスペースを読点に変換
+            reading = reading.replace(/ /g, '、');
 
             return reading;
         }
@@ -226,7 +232,7 @@
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(getReadingText(text));
             utterance.lang = 'ja-JP';
-            utterance.rate = 0.85;
+            utterance.rate = 0.85; // 少しゆっくりめに設定
             window.speechSynthesis.speak(utterance);
         }
 
@@ -236,6 +242,7 @@
         const app = {
             state: {
                 currentView: 'home',
+                learnRange: '1-20',   // 覚えるモードの範囲指定
                 practiceRange: '1-100', // 練習モードの範囲指定
                 stats: {
                     memorized: [],
@@ -245,7 +252,7 @@
                 },
                 learn: { flippedCards: new Set() },
                 practice: { questions: [], currentIndex: 0, score: 0, selectedAnswer: null, isCorrect: null, isFinished: false },
-                battleCpu: { gameState: 'ready', level: 1, deck: [], board: [], currentPoem: null, scoreP: 0, scoreC: 0, message: '', hands: [] },
+                battleCpu: { gameState: 'ready', level: 1, deck: [], board: [], currentPoem: null, scoreP: 0, scoreC: 0, message: '', hands: [], playerMissed: false },
                 battleLocal: { gameState: 'ready', deck: [], board: [], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '', hands: [], p1Missed: false, p2Missed: false, highlightId: null }
             },
             cpuTimer: null,
@@ -272,6 +279,9 @@
 
             render() {
                 const root = document.getElementById('app');
+                // DOM再構築によるスクロール位置のリセットを防ぐため、現在のスクロール位置を記憶
+                const scrollPos = root.scrollTop; 
+                
                 let headerHTML = '';
                 const titles = { 'learn':'覚える（百首一覧）', 'practiceMenu':'練習設定', 'practice':'練習モード', 'battleMenu':'対戦メニュー', 'battleCpu':'CPU対戦', 'battleLocal':'2人対戦' };
                 if(this.state.currentView !== 'home') {
@@ -283,7 +293,11 @@
                             </button>
                         </header>`;
                 }
+                
                 root.innerHTML = headerHTML + this.views[this.state.currentView]();
+                
+                // 描画後、即座にスクロール位置を復元する
+                setTimeout(() => { root.scrollTop = scrollPos; }, 0);
             },
 
             // ==========================================
@@ -355,12 +369,16 @@
                     `;
                 },
 
-                // ① 覚えるモード
+                // ① 覚えるモード（範囲指定付き）
                 learn() {
                     const s = app.state.learn;
                     const flipped = s.flippedCards;
+                    
+                    // 範囲の絞り込み
+                    const [min, max] = app.state.learnRange.split('-').map(Number);
+                    const filteredPoems = POEMS.filter(p => p.id >= min && p.id <= max);
 
-                    let cardsHTML = POEMS.map(poem => {
+                    let cardsHTML = filteredPoems.map(poem => {
                         const isMemorized = app.state.stats.memorized.includes(poem.id);
                         const isFlipped = flipped.has(poem.id);
 
@@ -390,9 +408,19 @@
                     return `
                         <div class="flex-1 tatami-bg p-3 sm:p-4 overflow-y-auto">
                             <div class="max-w-6xl mx-auto">
-                                <div class="bg-white/90 backdrop-blur-sm p-3 rounded shadow-sm mb-4 flex justify-between items-center sticky top-0 z-20 border-l-4 border-stone-800">
-                                    <span class="font-bold text-stone-700 font-serif">全百首</span>
-                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
+                                <div class="bg-white/90 backdrop-blur-sm p-3 rounded shadow-sm mb-4 flex flex-col sm:flex-row justify-between items-center gap-2 sticky top-0 z-20 border-l-4 border-stone-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-stone-700 font-serif whitespace-nowrap">表示範囲</span>
+                                        <select class="p-1 border border-stone-300 rounded font-bold font-sans text-sm focus:outline-none focus:border-stone-500" onchange="app.state.learnRange = this.value; app.render();">
+                                            <option value="1-20" ${app.state.learnRange === '1-20' ? 'selected' : ''}>1〜20首</option>
+                                            <option value="21-40" ${app.state.learnRange === '21-40' ? 'selected' : ''}>21〜40首</option>
+                                            <option value="41-60" ${app.state.learnRange === '41-60' ? 'selected' : ''}>41〜60首</option>
+                                            <option value="61-80" ${app.state.learnRange === '61-80' ? 'selected' : ''}>61〜80首</option>
+                                            <option value="81-100" ${app.state.learnRange === '81-100' ? 'selected' : ''}>81〜100首</option>
+                                            <option value="1-100" ${app.state.learnRange === '1-100' ? 'selected' : ''}>全首表示（1〜100）</option>
+                                        </select>
+                                    </div>
+                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
                                 </div>
                                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 pb-10">
                                     ${cardsHTML}
@@ -733,18 +761,15 @@
 
             // 練習モード
             startPractice() {
-                // 選択された範囲で配列を絞り込む
                 const [min, max] = this.state.practiceRange.split('-').map(Number);
                 const filteredPoems = POEMS.filter(p => p.id >= min && p.id <= max);
                 
                 const shuffled = [...filteredPoems].sort(() => 0.5 - Math.random());
-                // 対象が5首未満ならあるだけ、それ以上なら5首出題
                 const questionCount = Math.min(5, shuffled.length);
                 const selected = shuffled.slice(0, questionCount); 
 
                 const qs = selected.map(poem => {
                     let wrongPool = filteredPoems.filter(p => p.id !== poem.id);
-                    // 範囲が狭くてダミーの選択肢が足りない場合は、全体から補填する
                     if (wrongPool.length < 3) {
                         wrongPool = POEMS.filter(p => p.id !== poem.id);
                     }
@@ -790,10 +815,9 @@
             startBattleCpu(level) {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
                 const matchDeck = shuffled.slice(0, 20);
-                // 盤面の配置順をデッキ順とは独立させてランダムにする
                 const boardCards = [...matchDeck].sort(() => 0.5 - Math.random());
                 
-                this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: boardCards, currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [] };
+                this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: boardCards, currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [], playerMissed: false };
                 this.goTo('battleCpu');
             },
             nextRoundCpu() {
@@ -807,6 +831,7 @@
                     return;
                 }
                 s.hands = [];
+                s.playerMissed = false; // お手つきフラグをリセット
                 s.currentPoem = s.deck.shift();
                 s.gameState = 'playing';
                 s.message = '詠み上げ中...';
@@ -824,6 +849,9 @@
                 const s = this.state.battleCpu;
                 if(s.gameState !== 'playing') return;
                 
+                // ユーザーがすでにお手つきしている場合はロック
+                if(s.playerMissed) return;
+                
                 const isCorrect = cardId === s.currentPoem.id;
                 s.hands.push({ cardId: cardId, isCorrect: isCorrect, player: 'p1' });
 
@@ -835,11 +863,15 @@
                     s.gameState = 'round_end';
                     this.render(); 
                     
+                    // 正解の下の句を読み上げる
+                    speakText(s.currentPoem.shimo);
+                    
                     setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundCpu();
-                    }, 1000); 
+                    }, 2000); // 読み上げのため遷移時間を少し延長
                 } else {
+                    s.playerMissed = true; // お手つきフラグをON
                     s.message = 'お手つき！CPUの動きを待ちます...';
                     this.render(); 
                     
@@ -858,17 +890,19 @@
                 s.hands.push({ cardId: s.currentPoem.id, isCorrect: true, player: 'cpu' });
                 this.render();
 
+                // 正解の下の句を読み上げる
+                speakText(s.currentPoem.shimo);
+
                 setTimeout(() => {
                     s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                     this.nextRoundCpu();
-                }, 1000);
+                }, 2000); // 読み上げのため遷移時間を少し延長
             },
 
             // 2人対戦（ローカル）モード
             startBattleLocal() {
                 const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
                 const matchDeck = shuffled.slice(0, 20); 
-                // 盤面の配置順をデッキ順とは独立させてランダムにする
                 const boardCards = [...matchDeck].sort(() => 0.5 - Math.random());
                 
                 this.state.battleLocal = { gameState: 'ready', deck: matchDeck, board: boardCards, currentPoem: null, scoreP1: 0, scoreP2: 0, message: '中央の開始ボタンを押してください', hands: [], p1Missed: false, p2Missed: false, highlightId: null };
@@ -906,10 +940,14 @@
                     
                     s.gameState = 'round_end';
                     this.render();
+
+                    // 正解の下の句を読み上げる
+                    speakText(s.currentPoem.shimo);
+
                     setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundLocal();
-                    }, 1000);
+                    }, 2000); // 読み上げのため遷移時間を少し延長
 
                 } else {
                     if(pNum === 1) s.p1Missed = true;
@@ -921,7 +959,7 @@
                         s.hands = s.hands.filter(h => !(h.cardId === cardId && h.player === `p${pNum}`));
                         
                         if(s.p1Missed && s.p2Missed) {
-                            // ★ 両者お手つき時の処理（緑色・拡大強調・下の句の音声読み上げ）
+                            // ★ 両者お手つき時の処理
                             window.speechSynthesis.cancel();
                             s.gameState = 'round_end';
                             s.message = "両者お手つき！正解はこちら";
