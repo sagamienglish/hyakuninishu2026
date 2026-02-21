@@ -74,7 +74,6 @@
     <script>
         // ==========================================
         // 1. データ定義（百人一首 全100首）
-        // ※提供されたmp3ファイルのタイムスタンプデータを組み込みました
         // ==========================================
         const POEMS = [
             { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの", kamiTime:"00:31", shimoTime:"00:39" },
@@ -148,7 +147,7 @@
             { id:69, creator:"[能因法師:のういんほうし]", kami:"嵐吹く 三室の山の もみぢ葉は", shimo:"竜田の川の 錦なりけり", kimari:"あらし", kamiTime:"28:54", shimoTime:"29:02" },
             { id:70, creator:"[良暹法師:りょうぜんほうし]", kami:"寂しさに 宿を立ち出でて ながむれば", shimo:"いづこも同じ 秋の夕暮れ", kimari:"さ", kamiTime:"29:19", shimoTime:"29:27" },
             { id:71, creator:"[大納言経信:だいなごんつねのぶ]", kami:"夕されば 門田の稲葉 おとづれて", shimo:"芦のまろやに 秋風ぞ吹く", kimari:"ゆう", kamiTime:"29:44", shimoTime:"29:51" },
-            { id:72, creator:"[祐子内親王家紀伊:ゆうしないしんのうけのきい]", kami:"音に聞く 高師の浜の あだ波は", shimo:"かけじや袖の ぬれもこそすれ", kimari:"おと", kamiTime:"30:09", shimoTime:"30:17" },
+            { id:72, creator:"[祐子内親王家紀伊:ゆうしないしんのうけのきい]", kami:"音に聞く 高師の浜の あだ波は", shimo:"かけじや袖の ぬれもこそすれ", kimari:"おt", kamiTime:"30:09", shimoTime:"30:17" },
             { id:73, creator:"[権中納言匡房:ごんちゅうなごんまさふさ]", kami:"高砂の 尾の上の桜 咲きにけり", shimo:"外山の霞 立たずもあらなむ", kimari:"たか", kamiTime:"30:35", shimoTime:"30:43" },
             { id:74, creator:"[源俊頼朝臣:みなもとのとしよりあそん]", kami:"憂かりける 人を初瀬の 山おろしよ", shimo:"はげしかれとは 祈らぬものを", kimari:"うか", kamiTime:"31:00", shimoTime:"31:08" },
             { id:75, creator:"[藤原基俊:ふじわらのもととし]", kami:"契りおきし させもが露を 命にて", shimo:"あはれ今年の 秋もいぬめり", kimari:"ちぎりお", kamiTime:"31:24", shimoTime:"31:32" },
@@ -173,19 +172,20 @@
             { id:94, creator:"[参議雅経:さんぎまさつね]", kami:"み吉野の 山の秋風 小夜更けて", shimo:"ふるさと寒く 衣打つなり", kimari:"みよ", kamiTime:"39:21", shimoTime:"39:28" },
             { id:95, creator:"[前大僧正慈円:さきのだいそうじょうじえん]", kami:"おほけなく 憂き世の民に おほふかな", shimo:"わが立つ杣に 墨染の袖", kimari:"おほけ", kamiTime:"39:46", shimoTime:"39:54" },
             { id:96, creator:"[入道前太政大臣:にゅうどうさきのだいじょうだいじん]", kami:"花さそふ 嵐の庭の 雪ならで", shimo:"ふりゆくものは わが身なりけり", kimari:"はなさ", kamiTime:"40:11", shimoTime:"40:18" },
-            { id:97, creator:"[権中納言定家:ごんちゅうなごんさだいえ]", kami:"来ぬ人を 松帆の浦の 夕なぎに", shimo:"焼くや藻塩の 身もこがれつつ", kimari:"こぬ", kamiTime:"40:36", kamiTime:"40:43" },
+            { id:97, creator:"[権中納言定家:ごんちゅうなごんさだいえ]", kami:"来ぬ人を 松帆の浦の 夕なぎに", shimo:"焼くや藻塩の 身もこがれつつ", kimari:"こぬ", kamiTime:"40:36", shimoTime:"40:43" },
             { id:98, creator:"[従二位家隆:じゅにいいたか]", kami:"風そよぐ 楢の小川の 夕暮れは", shimo:"みそぎぞ夏の しるしなりける", kimari:"かぜそ", kamiTime:"41:01", shimoTime:"41:08" },
             { id:99, creator:"[後鳥羽院:ごとばいん]", kami:"人も惜し 人も恨めし あぢきなく", shimo:"世を思ふゆゑに 物思ふ身は", kimari:"ひとも", kamiTime:"41:26", shimoTime:"41:32" },
             { id:100, creator:"[順徳院:じゅんとくいん]", kami:"百敷や 古き軒端の しのぶにも", shimo:"なほあまりある 昔なりけり", kimari:"もも", kamiTime:"41:51", shimoTime:"41:58" }
         ];
 
-        // ★ CPUのレベルを全体的にシフト（数値を大きく＝遅く）しました
+        // ★ CPU難易度の調整
+        // base: 'after_kami' = 上の句を読み終わってから / 'start' = 上の句を読み始めてから
         const CPU_LEVELS = [
-            { level: 1, name: '入門', speedMin: 5000, speedMax: 6000 },
-            { level: 2, name: '初級', speedMin: 4000, speedMax: 5000 },
-            { level: 3, name: '中級', speedMin: 3000, speedMax: 4000 },
-            { level: 4, name: '上級', speedMin: 2000, speedMax: 3000 },
-            { level: 5, name: '達人', speedMin: 1000, speedMax: 2000 },
+            { level: 1, name: '入門', base: 'after_kami', min: 3000, max: 6000 },
+            { level: 2, name: '初級', base: 'after_kami', min: 2000, max: 5000 },
+            { level: 3, name: '中級', base: 'after_kami', min: 2000, max: 3000 },
+            { level: 4, name: '上級', base: 'start', min: 4000, max: 6000 },
+            { level: 5, name: '達人', base: 'start', min: 2000, max: 4000 },
         ];
 
         // ==========================================
@@ -207,13 +207,10 @@
         function speakTextFallback(yomiText) {
             if (!('speechSynthesis' in window) || !yomiText) return;
             window.speechSynthesis.cancel();
-            
-            // スペースを読点（、）に変換して、適切なポーズ（間）を空けながら読ませる
             const naturalReading = yomiText.replace(/ /g, '、');
-            
             const utterance = new SpeechSynthesisUtterance(naturalReading);
             utterance.lang = 'ja-JP';
-            utterance.rate = 0.85; // 少しゆっくりめに設定
+            utterance.rate = 0.85; 
             window.speechSynthesis.speak(utterance);
         }
 
@@ -221,7 +218,7 @@
         let audioPlayer = null;
         let playbackTimer = null;
         
-        // GitHubにアップロードしたファイル名（大文字小文字に注意してください）
+        // GitHubにアップロードしたファイル名
         const AUDIO_FILE_URL = '100ishu.mp3';
 
         function initAudio() {
@@ -235,7 +232,6 @@
             const poem = POEMS.find(p => p.id === poemId);
             if (!poem) return;
 
-            // 前の音声を止める
             audioPlayer.pause();
             clearTimeout(playbackTimer);
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -252,20 +248,19 @@
                 } else {
                     duration = 15;
                 }
-                // 途切れないよう、最大秒数の制限を延長
                 if (duration > 20) duration = 20; 
             }
 
             audioPlayer.currentTime = startTime;
             
-            // 再生を試みる。失敗した場合（ファイルが無い等）は合成音声に切り替える
             audioPlayer.play().then(() => {
                 playbackTimer = setTimeout(() => {
                     audioPlayer.pause();
                 }, duration * 1000);
             }).catch(e => {
-                console.warn("MP3の再生に失敗しました。ブラウザの自動読み上げ機能を使用します。:", e);
-                speakTextFallback(type === 'kami' ? poem.yomiKami : poem.yomiShimo);
+                console.warn("MP3の再生に失敗しました。自動読み上げ機能を使用します。:", e);
+                // バックアップの合成音声用（プロトタイプでは手動でルビデータを持っていないため一旦省略、テキストそのまま読ませる）
+                speakTextFallback(type === 'kami' ? poem.kami : poem.shimo);
             });
         }
 
@@ -295,6 +290,7 @@
                 battleLocal: { gameState: 'ready', deck: [], board: [], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '', hands: [], p1Missed: false, p2Missed: false, highlightId: null }
             },
             cpuTimer: null,
+            roundTimer: null, // ★ ラウンド間の移行を管理するタイマー（ホームに戻った時に止めるため）
 
             init() {
                 const saved = localStorage.getItem('hyakunin_stats_html');
@@ -312,6 +308,7 @@
             goTo(view) {
                 stopAudio();
                 clearTimeout(this.cpuTimer);
+                clearTimeout(this.roundTimer); // ★ ホームに戻った時に次の進行を止める
                 this.state.currentView = view;
                 this.render();
             },
@@ -479,7 +476,6 @@
                                             <span class="font-bold text-stone-700 font-serif whitespace-nowrap">表示範囲</span>
                                             <span class="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
                                         </div>
-                                        <!-- ★ 練習モードへの直通ボタンを追加 -->
                                         <button onclick="app.startPracticeFromLearn()" class="px-3 py-1.5 bg-orange-600 text-white font-bold rounded text-xs sm:text-sm shadow-sm hover:bg-orange-700 transition-colors flex items-center gap-1 ml-auto">
                                             <i class="fa-solid fa-scroll"></i> この範囲を練習
                                         </button>
@@ -697,13 +693,15 @@
                                 </div>
                             </div>
                             
-                            <!-- 中央部分をスリムに -->
-                            <div class="bg-stone-800 p-2 sm:p-4 text-center min-h-[80px] flex flex-col justify-center shadow-lg relative z-10">
+                            <div class="bg-stone-800 p-2 sm:p-4 text-center min-h-[90px] flex flex-col justify-center shadow-lg relative z-10">
                                 ${s.gameState === 'ready' ? 
                                     `<button onclick="app.nextRoundCpu()" class="bg-red-800 text-white px-8 py-2 rounded font-bold font-serif tracking-widest text-base sm:text-lg animate-pulse mx-auto shadow-lg hover:bg-red-700">試合開始</button>` : 
                                     `<div>
                                         <p class="text-[9px] sm:text-[10px] text-stone-400 mb-1 tracking-widest leading-none"><i class="fa-solid fa-volume-high"></i> 残り${s.deck.length + 1}首</p>
-                                        <p class="text-base sm:text-xl font-serif text-white tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</p>
+                                        <p class="text-base sm:text-xl font-serif text-white tracking-widest leading-relaxed">
+                                            ${formatRuby(s.currentPoem?.kami)}<br>
+                                            ${s.gameState === 'round_end' ? `<span class="text-red-400 mt-1 inline-block">${formatRuby(s.currentPoem?.shimo)}</span>` : ''}
+                                        </p>
                                     </div>`
                                 }
                             </div>
@@ -744,7 +742,7 @@
                             const isHighlight = s.highlightId === card.id;
                             const hand = s.hands.find(h => h.cardId === card.id && h.player === `p${pNum}`);
                             
-                            // 両者不正解の際の緑色強調（背景も緑がかるように）
+                            // 両者不正解の際の緑色強調
                             let extraClass = isHighlight ? "ring-4 ring-green-500 bg-green-100 scale-110 z-40 transition-transform shadow-2xl" : "";
                             let textClass = isHighlight ? "text-green-800 font-bold" : "text-stone-800";
                             let handHTML = "";
@@ -781,16 +779,19 @@
                                 ${renderPlayerArea(2)}
                             </div>
 
-                            <!-- 中央コントローラー (ご要望通り、縦幅を極力狭くスリムに) -->
-                            <div class="h-16 sm:h-20 bg-stone-950 border-y-2 border-stone-700 flex flex-col items-center justify-center text-white relative z-20 shadow-xl px-4 py-1">
+                            <!-- 中央コントローラー (高さ柔軟対応) -->
+                            <div class="bg-stone-950 border-y-2 border-stone-700 flex flex-col items-center justify-center text-white relative z-20 shadow-xl px-4 py-2 min-h-[4.5rem] sm:min-h-[5.5rem]">
                                 <button onclick="app.goTo('battleMenu')" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white p-2 transition-colors">
                                     <i class="fa-solid fa-xmark text-xl"></i>
                                 </button>
                                 <div class="text-center w-full max-w-lg">
                                     ${s.gameState === 'ready' ? 
                                         `<button onclick="app.nextRoundLocal()" class="bg-red-800 text-white px-6 py-1 rounded font-bold font-serif text-base tracking-widest animate-pulse shadow-lg hover:bg-red-700">試合開始</button>` :
-                                        `<p class="text-stone-400 text-[9px] sm:text-[10px] font-sans font-bold tracking-widest leading-none mb-1">${s.message}</p>
-                                         <div class="text-sm sm:text-lg tracking-widest leading-none">${formatRuby(s.currentPoem?.kami)}</div>`
+                                        `<p class="text-stone-400 text-[9px] sm:text-[10px] font-sans font-bold tracking-widest leading-none mb-0.5">${s.message}</p>
+                                         <p class="text-sm sm:text-lg tracking-widest leading-tight">
+                                            ${formatRuby(s.currentPoem?.kami)}
+                                            ${s.gameState === 'round_end' ? `<br><span class="text-red-400 mt-0.5 text-xs sm:text-sm inline-block">${formatRuby(s.currentPoem?.shimo)}</span>` : ''}
+                                         </p>`
                                     }
                                 </div>
                             </div>
@@ -820,7 +821,7 @@
                 } else {
                     this.state.learn.flippedCards.add(id);
                 }
-                this.render(true); // ★ trueを渡してスクロール位置を保持
+                this.render(true);
             },
             toggleMemorized(id) {
                 const s = this.state.stats;
@@ -831,10 +832,9 @@
                 }
                 this.saveStats();
                 this.state.learn.flippedCards.delete(id);
-                this.render(true); // ★ trueを渡してスクロール位置を保持
+                this.render(true);
             },
             
-            // ★ 覚えるモードから直で練習モードへ
             startPracticeFromLearn() {
                 this.state.practiceRange = this.state.learnRange;
                 this.startPractice();
@@ -875,7 +875,7 @@
                 playAudioSegment(s.questions[s.currentIndex].id, 'shimo');
                 this.render();
 
-                setTimeout(() => {
+                this.roundTimer = setTimeout(() => {
                     if(s.currentIndex + 1 < s.questions.length) {
                         s.currentIndex++;
                         s.selectedAnswer = null;
@@ -889,7 +889,6 @@
                         this.saveStats();
                         this.render();
                     }
-                // ★ 読み上げ完了を待つため、遷移時間を長めに設定
                 }, 6000); 
             },
 
@@ -921,8 +920,15 @@
                 
                 playAudioSegment(s.currentPoem.id, 'kami');
 
+                // ★ CPU難易度の計算
                 const levelData = CPU_LEVELS.find(l => l.level === s.level);
-                const reactionTime = Math.floor(Math.random() * (levelData.speedMax - levelData.speedMin)) + levelData.speedMin;
+                let reactionTime = Math.floor(Math.random() * (levelData.max - levelData.min)) + levelData.min;
+                
+                // base が 'after_kami' (上の句の読み終わり基準) の場合は、上の句の長さを加算する
+                if (levelData.base === 'after_kami') {
+                    const kamiDurationMs = (parseTime(s.currentPoem.shimoTime) - parseTime(s.currentPoem.kamiTime)) * 1000;
+                    reactionTime += kamiDurationMs;
+                }
                 
                 this.cpuTimer = setTimeout(() => {
                     this.actionCpuTakes();
@@ -942,12 +948,11 @@
                     s.scoreP++;
                     s.message = '見事！あなたが取りました。';
                     s.gameState = 'round_end';
-                    this.render(); 
+                    this.render(); // ここで下の句の文字が表示される
                     
                     playAudioSegment(s.currentPoem.id, 'shimo');
                     
-                    // ★ 読み上げ完了を待つため、遷移時間を長めに設定
-                    setTimeout(() => {
+                    this.roundTimer = setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundCpu();
                     }, 6000); 
@@ -968,12 +973,11 @@
                 s.message = 'CPUに取られました！';
                 s.gameState = 'round_end';
                 s.hands.push({ cardId: s.currentPoem.id, isCorrect: true, player: 'cpu' });
-                this.render();
+                this.render(); // ここで下の句の文字が表示される
 
                 playAudioSegment(s.currentPoem.id, 'shimo');
 
-                // ★ 読み上げ完了を待つため、遷移時間を長めに設定
-                setTimeout(() => {
+                this.roundTimer = setTimeout(() => {
                     s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                     this.nextRoundCpu();
                 }, 6000); 
@@ -1019,12 +1023,11 @@
                     else { s.scoreP2++; s.message = "P2 (上側) が取りました！"; }
                     
                     s.gameState = 'round_end';
-                    this.render();
+                    this.render(); // ここで下の句の文字が表示される
 
                     playAudioSegment(s.currentPoem.id, 'shimo');
 
-                    // ★ 読み上げ完了を待つため、遷移時間を長めに設定
-                    setTimeout(() => {
+                    this.roundTimer = setTimeout(() => {
                         s.board = s.board.filter(c => c.id !== cardId);
                         this.nextRoundLocal();
                     }, 6000);
@@ -1042,12 +1045,11 @@
                             s.gameState = 'round_end';
                             s.message = "両者お手つき！正解はこちら";
                             s.highlightId = s.currentPoem.id;
-                            this.render();
+                            this.render(); // ここで下の句の文字が表示される
                             
                             playAudioSegment(s.currentPoem.id, 'shimo');
                             
-                            // ★ 読み上げ完了を待つため、遷移時間を長めに設定
-                            setTimeout(() => {
+                            this.roundTimer = setTimeout(() => {
                                 s.board = s.board.filter(c => c.id !== s.currentPoem.id);
                                 this.nextRoundLocal();
                             }, 6000); 
