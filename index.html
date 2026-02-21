@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>百人一首マスター</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* カスタムスタイル */
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; }
+        .font-serif { font-family: "Sawarabi Mincho", "Noto Serif JP", "Yu Mincho", "MS PMincho", serif; }
+        .vertical-rl { writing-mode: vertical-rl; }
+        
+        /* 畳背景・和柄背景 */
+        .tatami-bg {
+            background-color: #d1cfa9;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+        }
+        .wagara-bg {
+            background-color: #f8f6f0;
+            background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+        
+        /* 札のスタイル */
+        .karuta-card {
+            background-color: #fff;
+            border: 3px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* スクロールバー非表示 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* アニメーション */
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.2s ease-out forwards; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            20% { transform: translateX(-4px) rotate(-2deg); }
+            40% { transform: translateX(4px) rotate(2deg); }
+            60% { transform: translateX(-4px) rotate(-2deg); }
+            80% { transform: translateX(4px) rotate(2deg); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes vanish {
+            0% { transform: scale(1); opacity: 1; }
+            30% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .animate-vanish { animation: vanish 0.6s ease-in forwards; pointer-events: none; }
+        
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body class="wagara-bg text-stone-800 h-screen overflow-hidden select-none">
+    
+    <div id="app" class="h-full w-full flex flex-col relative overflow-y-auto no-scrollbar">
+        <!-- JSでUIが描画されます -->
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. データ定義（百人一首 全100首）
+        // ==========================================
+        const POEMS = [
+            { id:1, creator:"[天智天皇:てんじてんのう]", kami:"[秋:あき]の[田:た]の かりほの[庵:いほ]の [苫:とま]をあらみ", shimo:"わが[衣手:ころもで]は [露:つゆ]にぬれつつ", kimari:"あきの" },
+            { id:2, creator:"[持統天皇:じとうてんのう]", kami:"[春:はる]すぎて [夏:なつ]来[にけらし:にけらし] [白妙:しろたへ]の", shimo:"[衣:ころも]ほすてふ [天:あま]の[香具山:かぐやま]", kimari:"はるす" },
+            { id:3, creator:"[柿本人麻呂:かきのもとのひとまろ]", kami:"あしびきの [山鳥:やまどり]の[尾:を]の しだり[尾:を]の", shimo:"ながながし[夜:よ]を ひとりかも[寝:ね]む", kimari:"あし" },
+            { id:4, creator:"[山部赤人:やまべのあかひと]", kami:"[田子:たご]の[浦:うら]に うち[出:い]でて[見:み]れば [白妙:しろたへ]の", shimo:"[富士:ふじ]の[高嶺:たかね]に [雪:ゆき]は[降:ふ]りつつ", kimari:"たご" },
+            { id:5, creator:"[猿丸大夫:さるまるだゆう]", kami:"[奥山:おくやま]に [紅葉:もみぢ][踏:ふ]みわけ [鳴:な]く[鹿:しか]の", shimo:"[声:こゑ]きく[時:とき]ぞ [秋:あき]は[悲:かな]しき", kimari:"おく" },
+            { id:6, creator:"[中納言家持:ちゅうなごんやかもち]", kami:"かささぎの [渡:わた]せる[橋:はし]に おく[霜:しも]の", shimo:"[白:しろ]きを[見:み]れば [夜:よ]ぞふけにける", kimari:"かさ" },
+            { id:7, creator:"[安倍仲麿:あべのなかまろ]", kami:"[天:あま]の[原:はら] ふりさけ[見:み]れば [春日:かすが]なる", shimo:"[三笠:みかさ]の[山:やま]に [出:い]でし[月:つき]かも", kimari:"あまの" },
+            { id:8, creator:"[喜撰法師:きせんほうし]", kami:"わが[庵:いほ]は [都:みやこ]のたつみ しかぞ[住:す]む", shimo:"[世:よ]をうぢ[山:やま]と [人:ひと]はいふなり", kimari:"わがい" },
+            { id:9, creator:"[小野小町:おののこまち]", kami:"[花:はな]の[色:いろ]は うつりにけりな いたづらに", shimo:"わが[身世:みよ]にふる ながめせしまに", kimari:"はなの" },
+            { id:10, creator:"[蝉丸:せみまる]", kami:"これやこの [行:ゆ]くも[帰:かへ]るも [別:わか]れては", shimo:"[知:し]るも[知:し]らぬも [逢坂:あふさか]の[関:せき]", kimari:"これ" },
+            { id:11, creator:"[参議篁:さんぎたかむら]", kami:"わたの[原:はら] 八十島かけて 漕ぎ出でぬと", shimo:"[人:ひと]には告げよ [海人:あま]の釣舟", kimari:"わたのはら や" },
+            { id:12, creator:"[僧正遍昭:そうじょうへんじょう]", kami:"[天:あま]つ[風:かぜ] 雲の通ひ路 吹きとぢよ", shimo:"[乙女:おとめ]の[姿:すがた] しばしとどめむ", kimari:"あまつ" },
+            { id:13, creator:"[陽成院:ようぜいいん]", kami:"[筑波嶺:つくばね]の 峰より落つる みなの[川:がわ]", shimo:"[恋:こい]ぞつもりて 淵となりぬる", kimari:"つく" },
+            { id:14, creator:"[河原左大臣:かわらのさだいじん]", kami:"[陸奥:みちのく]の しのぶもぢずり 誰ゆゑに", shimo:"乱れそめにし 我ならなくに", kimari:"みち" },
+            { id:15, creator:"[光孝天皇:こうこうてんのう]", kami:"[君:きみ]がため [春:はる]の[野:の]に出でて 若菜摘む", shimo:"わが[衣手:ころもで]に [雪:ゆき]は降りつつ", kimari:"きみがため は" },
+            { id:16, creator:"[中納言行平:ちゅうなごんゆきひら]", kami:"立ち別れ いなばの山の 峰に生ふる", shimo:"まつとし聞かば 今帰り来む", kimari:"たち" },
+            { id:17, creator:"[在原業平朝臣:ありわらのなりひらあそん]", kami:"ちはやぶる 神代も聞かず [竜田川:たつたがわ]", shimo:"からくれなゐに [水:みず]くくるとは", kimari:"ちは" },
+            { id:18, creator:"[藤原敏行朝臣:ふじわらのとしゆきあそん]", kami:"住の江の 岸に寄る波 よるさへや", shimo:"[夢:ゆめ]の通ひ路 [人:ひと]目よくらむ", kimari:"す" },
+            { id:19, creator:"[伊勢:いせ]", kami:"難波潟 みじかき芦の ふしの間も", shimo:"逢はでこの世を 過ぐしてよとや", kimari:"なにわが" },
+            { id:20, creator:"[元良親王:もとよししんのう]", kami:"わびぬれば 今はた同じ 難波なる", shimo:"みをつくしても 逢はむとぞ思ふ", kimari:"わび" },
+            { id:21, creator:"[素性法師:そせいほうし]", kami:"今来むと いひしばかりに 長月の", shimo:"有明の月を 待ち出でつるかな", kimari:"いまこ" },
+            { id:22, creator:"[文屋康秀:ふんやのやすひで]", kami:"吹くからに 秋の草木の しをるれば", shimo:"むべ山風を 嵐といふらむ", kimari:"ふく" },
+            { id:23, creator:"[大江千里:おおえのちさと]", kami:"月見れば 千々に物こそ 悲しけれ", shimo:"わが身一つの 秋にはあらねど", kimari:"つき" },
+            { id:24, creator:"[菅家:かんけ]", kami:"このたびは 幣もとりあへず 手向山", shimo:"紅葉の錦 神のまにまに", kimari:"この" },
+            { id:25, creator:"[三条右大臣:さんじょうのうだいじん]", kami:"名にし負はば 逢坂山の さねかづら", shimo:"人に知られで くるよしもがな", kimari:"なにし" },
+            { id:26, creator:"[貞信公:ていしんこう]", kami:"小倉山 峰のもみぢ葉 心あらば", shimo:"今ひとたびの みゆき待たなむ", kimari:"をぐ" },
+            { id:27, creator:"[中納言兼輔:ちゅうなごんかねすけ]", kami:"みかの原 わきて流るる いづみ川", shimo:"いつ見きとてか 恋しかるらむ", kimari:"みか" },
+            { id:28, creator:"[源宗于朝臣:みなもとのむねゆきあそん]", kami:"山里は 冬ぞ寂しさ まさりける", shimo:"人目も草も かれぬと思へば", kimari:"やまざ" },
+            { id:29, creator:"[凡河内躬恒:おおしこうちのみつね]", kami:"心あてに 折らばや折らむ 初霜の", shimo:"置きまどはせる 白菊の花", kimari:"こころあ" },
+            { id:30, creator:"[壬生忠岑:みぶのただみね]", kami:"有明の つれなく見えし 別れより", shimo:"暁ばかり 憂きものはなし", kimari:"ありあ" },
+            { id:31, creator:"[坂上是則:さかのうえのこれのり]", kami:"朝ぼらけ 有明の月と 見るまでに", shimo:"吉野の里に 降れる白雪", kimari:"あさぼらけ あ" },
+            { id:32, creator:"[春道列樹:はるみちのつらき]", kami:"山川に 風のかけたる しがらみは", shimo:"流れもあへぬ 紅葉なりけり", kimari:"やまが" },
+            { id:33, creator:"[紀友則:きのとものり]", kami:"ひさかたの 光のどけき 春の日に", shimo:"しづ心なく 花の散るらむ", kimari:"ひさ" },
+            { id:34, creator:"[藤原興風:ふじわらのおきかぜ]", kami:"誰をかも 知る人にせむ 高砂の", shimo:"松も昔の 友ならなくに", kimari:"たれ" },
+            { id:35, creator:"[紀貫之:きのつらゆき]", kami:"人はいさ 心も知らず ふるさとは", shimo:"花ぞ昔の 香ににほひける", kimari:"ひとは" },
+            { id:36, creator:"[清原深養父:きよはらのふかやぶ]", kami:"夏の夜は まだ宵ながら 明けぬるを", shimo:"雲のいづこに 月宿るらむ", kimari:"なつ" },
+            { id:37, creator:"[文屋朝康:ふんやのあさやす]", kami:"白露に 風の吹きしく 秋の野は", shimo:"つらぬきとめぬ 玉ぞ散りける", kimari:"しら" },
+            { id:38, creator:"[右近:うこん]", kami:"忘らるる 身をば思はず 誓ひてし", shimo:"人の命の 惜しくもあるかな", kimari:"わすら" },
+            { id:39, creator:"[参議等:さんぎひとし]", kami:"浅茅生の 小野の篠原 しのぶれど", shimo:"あまりてなどか 人の恋しき", kimari:"あさぢ" },
+            { id:40, creator:"[平兼盛:たいらのかねもり]", kami:"忍ぶれど 色に出でにけり わが恋は", shimo:"物や思ふと 人の問ふまで", kimari:"しの" },
+            { id:41, creator:"[壬生忠見:みぶのただみ]", kami:"恋すてふ わが名はまだき 立ちにけり", shimo:"人知れずこそ 思ひそめしか", kimari:"こい" },
+            { id:42, creator:"[清原元輔:きよはらのもとすけ]", kami:"契りきな かたみに袖を しぼりつつ", shimo:"末の松山 波越さじとは", kimari:"ちぎりき" },
+            { id:43, creator:"[権中納言敦忠:ごんちゅうなごんあつただ]", kami:"逢ひ見ての のちの心に くらぶれば", shimo:"昔は物を 思はざりけり", kimari:"あい" },
+            { id:44, creator:"[中納言朝忠:ちゅうなごんあさただ]", kami:"逢ふことの 絶えてしなくは なかなかに", shimo:"人をも身をも 恨みざらまし", kimari:"あふこ" },
+            { id:45, creator:"[謙徳公:けんとくこう]", kami:"あはれとも いふべき人は 思ほえで", shimo:"身のいたづらに なりぬべきかな", kimari:"あはれ" },
+            { id:46, creator:"[曾禰好忠:そねのよしただ]", kami:"由良の門を 渡る舟人 かぢを絶え", shimo:"ゆくへも知らぬ 恋の道かな", kimari:"ゆら" },
+            { id:47, creator:"[恵慶法師:えぎょうほうし]", kami:"八重葎 しげれる宿の さびしきに", shimo:"人こそ見えね 秋は来にけり", kimari:"やえ" },
+            { id:48, creator:"[源重之:みなもとのしげゆき]", kami:"風をいたみ 岩打つ波の おのれのみ", shimo:"くだけて物を 思ふころかな", kimari:"かぜを" },
+            { id:49, creator:"[大中臣能宣朝臣:おおなかとみのよしのぶあそん]", kami:"御垣守 衛士のたく火の 夜は燃え", shimo:"昼は消えつつ 物をこそ思へ", kimari:"みかき" },
+            { id:50, creator:"[藤原義孝:ふじわらのよしたか]", kami:"君がため 惜しからざりし 命さへ", shimo:"長くもがなと 思ひけるかな", kimari:"きみがため お" },
+            { id:51, creator:"[藤原実方朝臣:ふじわらのさねかたあそん]", kami:"かくとだに えやはいぶきの さしも草", shimo:"さしも知らじな 燃ゆる思ひを", kimari:"かく" },
+            { id:52, creator:"[藤原道信朝臣:ふじわらのみちのぶあそん]", kami:"明けぬれば 暮るるものとは 知りながら", shimo:"なほ恨めしき 朝ぼらけかな", kimari:"あけ" },
+            { id:53, creator:"[右大将道綱母:うだいしょうみちつなのはは]", kami:"嘆きつつ ひとり寝る夜の 明くる間は", shimo:"いかに久しき ものとかは知る", kimari:"なげ" },
+            { id:54, creator:"[儀同三司母:ぎどうさんしのはは]", kami:"忘れじの 行く末までは かたければ", shimo:"今日を限りの 命ともがな", kimari:"わすれ" },
+            { id:55, creator:"[大納言公任:だいなごんきんとう]", kami:"滝の音は 絶えて久しく なりぬれど", shimo:"名こそ流れて なほ聞こえけれ", kimari:"たき" },
+            { id:56, creator:"[和泉式部:いずみしきぶ]", kami:"あらざらむ この世のほかの 思ひ出に", shimo:"今ひとたびの 逢ふこともがな", kimari:"あらざ" },
+            { id:57, creator:"[紫式部:むらさきしきぶ]", kami:"めぐり逢ひて 見しやそれとも わかぬ間に", shimo:"雲隠れにし 夜半の月かな", kimari:"め" },
+            { id:58, creator:"[大弐三位:だいにのさんみ]", kami:"有馬山 猪名の笹原 風吹けば", shimo:"いでそよ人を 忘れやはする", kimari:"ありま" },
+            { id:59, creator:"[赤染衛門:あかぞめえもん]", kami:"やすらはで 寝なましものを さ夜更けて", shimo:"傾くまでの 月を見しかな", kimari:"やす" },
+            { id:60, creator:"[小式部内侍:こしきぶのないし]", kami:"大江山 いく野の道の 遠ければ", shimo:"まだふみもみず 天の橋立", kimari:"おおえ" },
+            { id:61, creator:"[伊勢大輔:いせのたいふ]", kami:"いにしへの 奈良の都の 八重桜", shimo:"けふ九重に にほひぬるかな", kimari:"いに" },
+            { id:62, creator:"[清少納言:せいしょうなごん]", kami:"夜をこめて 鳥のそら音は はかるとも", shimo:"よに逢坂の 関は許さじ", kimari:"よを" },
+            { id:63, creator:"[左京大夫道雅:さきょうのだいぶみちまさ]", kami:"今はただ 思ひ絶えなむ とばかりを", shimo:"人づてならで 言ふよしもがな", kimari:"いまは" },
+            { id:64, creator:"[権中納言定頼:ごんちゅうなごんさだより]", kami:"朝ぼらけ 宇治の川霧 たえだえに", shimo:"あらはれわたる 瀬々の網代木", kimari:"あさぼらけ う" },
+            { id:65, creator:"[相模:さがみ]", kami:"恨みわび 干さぬ袖だに あるものを", shimo:"恋に朽ちなむ 名こそ惜しけれ", kimari:"うら" },
+            { id:66, creator:"[前大僧正行尊:さきのだいそうじょうぎょうそん]", kami:"もろともに あはれと思へ 山桜", shimo:"花よりほかに 知る人もなし", kimari:"もろ" },
+            { id:67, creator:"[周防内侍:すおうのないし]", kami:"春の夜の 夢ばかりなる 手枕に", shimo:"かひなく立たむ 名こそ惜しけれ", kimari:"はるの" },
+            { id:68, creator:"[三条院:さんじょういん]", kami:"心にも あらでうき世に ながらへば", shimo:"恋しかるべき 夜半の月かな", kimari:"こころに" },
+            { id:69, creator:"[能因法師:のういんほうし]", kami:"嵐吹く 三室の山の もみぢ葉は", shimo:"竜田の川の 錦なりけり", kimari:"あらし" },
+            { id:70, creator:"[良暹法師:りょうぜんほうし]", kami:"寂しさに 宿を立ち出でて ながむれば", shimo:"いづこも同じ 秋の夕暮れ", kimari:"さ" },
+            { id:71, creator:"[大納言経信:だいなごんつねのぶ]", kami:"夕されば 門田の稲葉 おとづれて", shimo:"芦のまろやに 秋風ぞ吹く", kimari:"ゆう" },
+            { id:72, creator:"[祐子内親王家紀伊:ゆうしないしんのうけのきい]", kami:"音に聞く 高師の浜の あだ波は", shimo:"かけじや袖の ぬれもこそすれ", kimari:"おと" },
+            { id:73, creator:"[権中納言匡房:ごんちゅうなごんまさふさ]", kami:"高砂の 尾の上の桜 咲きにけり", shimo:"外山の霞 立たずもあらなむ", kimari:"たか" },
+            { id:74, creator:"[源俊頼朝臣:みなもとのとしよりあそん]", kami:"憂かりける 人を初瀬の 山おろしよ", shimo:"はげしかれとは 祈らぬものを", kimari:"うか" },
+            { id:75, creator:"[藤原基俊:ふじわらのもととし]", kami:"契りおきし させもが露を 命にて", shimo:"あはれ今年の 秋もいぬめり", kimari:"ちぎりお" },
+            { id:76, creator:"[法性寺入道前関白太政大臣:ほうしょうじにゅうどうさきのかんぱくだいじょうだいじん]", kami:"わたの原 漕ぎ出でて見れば ひさかたの", shimo:"雲居にまがふ 沖つ白波", kimari:"わたのはら こ" },
+            { id:77, creator:"[崇徳院:すとくいん]", kami:"瀬をはやみ 岩にせかるる 滝川の", shimo:"われても末に 逢はむとぞ思ふ", kimari:"せを" },
+            { id:78, creator:"[源兼昌:みなもとのかねまさ]", kami:"淡路島 通ふ千鳥の 鳴く声に", shimo:"幾夜寝覚めぬ 須磨の関守", kimari:"あわ" },
+            { id:79, creator:"[左京大夫顕輔:さきょうのだいぶあきすけ]", kami:"秋風に たなびく雲の 絶え間より", shimo:"もれいづる月の 影のさやけさ", kimari:"あきか" },
+            { id:80, creator:"[待賢門院堀河:たいけんもんいんのほりかわ]", kami:"長からむ 心も知らず 黒髪の", shimo:"乱れてけさは 物をこそ思へ", kimari:"ながか" },
+            { id:81, creator:"[後徳大寺左大臣:ごとくだいじのさだいじん]", kami:"ほととぎす 鳴きつる方を ながむれば", shimo:"ただ有明の 月ぞ残れる", kimari:"ほと" },
+            { id:82, creator:"[道因法師:どういんほうし]", kami:"思ひわび さても命は あるものを", shimo:"憂きに堪へぬは 涙なりけり", kimari:"おも" },
+            { id:83, creator:"[皇太后宮大夫俊成:こうたいごうぐうのだいぶとしなり]", kami:"世の中よ 道こそなけれ 思ひ入る", shimo:"山の奥にも 鹿ぞ鳴くなる", kimari:"よの" },
+            { id:84, creator:"[藤原清輔朝臣:ふじわらのきよすけあそん]", kami:"ながらへば またこのごろや しのばれむ", shimo:"憂しと見し世ぞ 今は恋しき", kimari:"ながか" },
+            { id:85, creator:"[俊恵法師:しゅんえほうし]", kami:"夜もすがら 物思ふころは 明けやらで", shimo:"閨のひまさへ つれなかりけり", kimari:"よも" },
+            { id:86, creator:"[西行法師:さいぎょうほうし]", kami:"嘆けとて 月やは物を 思はする", shimo:"かこち顔なる わが涙かな", kimari:"なげけ" },
+            { id:87, creator:"[寂蓮法師:じゃくれんほうし]", kami:"村雨の 露もまだひぬ まきの葉に", shimo:"霧立ちのぼる 秋の夕暮れ", kimari:"む" },
+            { id:88, creator:"[皇嘉門院別当:こうかもんいんのべっとう]", kami:"難波江の 芦のかりねの ひとよゆゑ", shimo:"みをつくしてや 恋ひわたるべき", kimari:"なにわえ" },
+            { id:89, creator:"[式子内親王:しょくしないしんのう]", kami:"玉の緒よ 絶えなば絶えね ながらへば", shimo:"忍ぶることの 弱りもぞする", kimari:"たま" },
+            { id:90, creator:"[殷富門院大輔:いんぷもんいんのたいふ]", kami:"見せばやな 雄島の海人の 袖だにも", shimo:"濡れにぞ濡れし 色は変はらず", kimari:"みせ" },
+            { id:91, creator:"[後京極摂政前太政大臣:ごきょうごくせっしょうさきのだいじょうだいじん]", kami:"きりぎりす 鳴くや霜夜の さむしろに", shimo:"衣片敷き ひとりかも寝む", kimari:"きり" },
+            { id:92, creator:"[二条院讃岐:にじょういんのさぬき]", kami:"わが袖は 潮干に見えぬ 沖の石の", shimo:"人こそ知らね 乾く間もなし", kimari:"わがそ" },
+            { id:93, creator:"[鎌倉右大臣:かまくらうだいじん]", kami:"世の中は 常にもがもな 渚漕ぐ", shimo:"海人の小舟の 綱手かなしも", kimari:"よのなかは" },
+            { id:94, creator:"[参議雅経:さんぎまさつね]", kami:"み吉野の 山の秋風 小夜更けて", shimo:"ふるさと寒く 衣打つなり", kimari:"みよ" },
+            { id:95, creator:"[前大僧正慈円:さきのだいそうじょうじえん]", kami:"おほけなく 憂き世の民に おほふかな", shimo:"わが立つ杣に 墨染の袖", kimari:"おほけ" },
+            { id:96, creator:"[入道前太政大臣:にゅうどうさきのだいじょうだいじん]", kami:"花さそふ 嵐の庭の 雪ならで", shimo:"ふりゆくものは わが身なりけり", kimari:"はなさ" },
+            { id:97, creator:"[権中納言定家:ごんちゅうなごんさだいえ]", kami:"来ぬ人を 松帆の浦の 夕なぎに", shimo:"焼くや藻塩の 身もこがれつつ", kimari:"こぬ" },
+            { id:98, creator:"[従二位家隆:じゅにいいたか]", kami:"風そよぐ 楢の小川の 夕暮れは", shimo:"みそぎぞ夏の しるしなりける", kimari:"かぜそ" },
+            { id:99, creator:"[後鳥羽院:ごとばいん]", kami:"人も惜し 人も恨めし あぢきなく", shimo:"世を思ふゆゑに 物思ふ身は", kimari:"ひとも" },
+            { id:100, creator:"[順徳院:じゅんとくいん]", kami:"百敷や 古き軒端の しのぶにも", shimo:"なほあまりある 昔なりけり", kimari:"もも" }
+        ];
+
+        const CPU_LEVELS = [
+            { level: 1, name: '入門', speedMin: 4000, speedMax: 5000 },
+            { level: 2, name: '初級', speedMin: 3000, speedMax: 4000 },
+            { level: 3, name: '中級', speedMin: 2000, speedMax: 3000 },
+            { level: 4, name: '上級', speedMin: 1000, speedMax: 2000 },
+            { level: 5, name: '達人', speedMin: 500, speedMax: 1000 },
+        ];
+
+        // ==========================================
+        // 2. ヘルパー関数（ルビ、音声）
+        // ==========================================
+        function formatRuby(text) {
+            if (!text) return '';
+            return text.replace(/\[([^:]+):([^\]]+)\]/g, '<ruby class="mx-[1px]">$1<rt class="text-[0.55em] text-stone-500 font-sans tracking-tighter leading-none">$2</rt></ruby>');
+        }
+
+        function getReadingText(text) {
+            if (!text) return '';
+            return text.replace(/\[([^:]+):([^\]]+)\]/g, '$2');
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(getReadingText(text));
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // ==========================================
+        // 3. アプリケーション本体（State & ロジック）
+        // ==========================================
+        const app = {
+            state: {
+                currentView: 'home',
+                stats: {
+                    memorized: [],
+                    practiceScores: 0,
+                    playCount: 0,
+                    cpuRecords: { 1:{w:0,l:0}, 2:{w:0,l:0}, 3:{w:0,l:0}, 4:{w:0,l:0}, 5:{w:0,l:0} }
+                },
+                learn: { flippedCards: new Set() },
+                practice: { questions: [], currentIndex: 0, score: 0, selectedAnswer: null, isCorrect: null, isFinished: false },
+                battleCpu: { gameState: 'ready', level: 1, deck: [], board: [], currentPoem: null, scoreP: 0, scoreC: 0, message: '', hands: [] },
+                battleLocal: { gameState: 'ready', deck: [], board: [], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '', hands: [], p1Missed: false, p2Missed: false, highlightId: null }
+            },
+            cpuTimer: null,
+
+            init() {
+                const saved = localStorage.getItem('hyakunin_stats_html');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if(parsed.cpuRecords) this.state.stats = parsed;
+                }
+                this.render();
+            },
+
+            saveStats() {
+                localStorage.setItem('hyakunin_stats_html', JSON.stringify(this.state.stats));
+            },
+
+            goTo(view) {
+                window.speechSynthesis.cancel();
+                clearTimeout(this.cpuTimer);
+                this.state.currentView = view;
+                this.render();
+            },
+
+            render() {
+                const root = document.getElementById('app');
+                let headerHTML = '';
+                const titles = { 'learn':'覚える（百首一覧）', 'practice':'練習モード', 'battleMenu':'対戦メニュー', 'battleCpu':'CPU対戦', 'battleLocal':'2人対戦' };
+                if(this.state.currentView !== 'home') {
+                    headerHTML = `
+                        <header class="bg-stone-800 text-stone-100 p-4 shadow-md flex items-center justify-between sticky top-0 z-50 flex-shrink-0 border-b border-stone-600">
+                            <h1 class="text-xl font-serif font-bold tracking-widest">${titles[this.state.currentView]}</h1>
+                            <button onclick="app.goTo('home')" class="p-2 hover:bg-stone-700 rounded transition-colors flex items-center gap-2 text-sm font-bold">
+                                <i class="fa-solid fa-house"></i> ホーム
+                            </button>
+                        </header>`;
+                }
+                root.innerHTML = headerHTML + this.views[this.state.currentView]();
+            },
+
+            // ==========================================
+            // 画面描画関数（Views）
+            // ==========================================
+            views: {
+                home() {
+                    const s = app.state.stats;
+                    const memCount = s.memorized.length;
+                    const total = POEMS.length;
+                    const percent = (memCount / total) * 100;
+
+                    return `
+                        <div class="flex-1 flex flex-col overflow-y-auto pb-10">
+                            <!-- 和風ヘッダー -->
+                            <header class="bg-stone-900 text-[#d1cfa9] p-12 text-center shadow-lg relative border-b-4 border-[#8c7e63] flex-shrink-0 overflow-hidden">
+                                <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, #fff 25%, #fff 75%, #000 75%, #000); background-size: 20px 20px;"></div>
+                                <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-[0.3em] relative z-10 text-shadow mb-2">百人一首マスター</h1>
+                            </header>
+                            
+                            <main class="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 mt-4 flex flex-col gap-6">
+                                <!-- 学習の記録 -->
+                                <div class="bg-white p-6 rounded-lg shadow border border-stone-200 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 text-9xl text-stone-100 -mt-8 -mr-8 opacity-50 pointer-events-none"><i class="fa-solid fa-fan"></i></div>
+                                    <div class="flex items-center gap-4 relative z-10">
+                                        <div class="bg-[#d1cfa9] p-4 rounded-full"><i class="fa-solid fa-pen-nib text-stone-800 text-2xl"></i></div>
+                                        <div>
+                                            <h3 class="font-bold text-stone-800 text-lg font-serif tracking-widest">修練の記録</h3>
+                                            <p class="text-sm text-stone-600 font-sans mt-1">練習回数: <span class="font-bold">${s.playCount}</span> 回 / 累計正解: <span class="font-bold">${s.practiceScores}</span> 問</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-1/2 relative z-10">
+                                        <div class="flex justify-between text-sm mb-1 font-bold text-stone-700 font-serif">
+                                            <span>暗記した歌</span>
+                                            <span>${memCount} / ${total} 首</span>
+                                        </div>
+                                        <div class="w-full bg-stone-200 rounded-full h-3 overflow-hidden shadow-inner">
+                                            <div class="bg-[#8c7e63] h-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- メニューボタン -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-serif">
+                                    <button onclick="app.startLearn()" class="bg-white p-8 rounded-lg shadow hover:shadow-lg transition-all border border-stone-200 flex flex-col items-center group relative overflow-hidden">
+                                        <div class="absolute -bottom-4 -right-4 text-7xl text-blue-50 opacity-50 group-hover:scale-110 transition-transform"><i class="fa-solid fa-book-open"></i></div>
+                                        <div class="text-[#8c7e63] mb-4 text-4xl"><i class="fa-solid fa-book-open"></i></div>
+                                        <h2 class="text-2xl font-bold mb-2 tracking-widest">覚える</h2>
+                                        <p class="text-stone-500 text-sm text-center font-sans">畳の上に並んだ百首の札を<br>直感的にめくって暗記</p>
+                                    </button>
+                                    
+                                    <button onclick="app.startPractice()" class="bg-white p-8 rounded-lg shadow hover:shadow-lg transition-all border border-stone-200 flex flex-col items-center group relative overflow-hidden">
+                                        <div class="absolute -bottom-4 -right-4 text-7xl text-orange-50 opacity-50 group-hover:scale-110 transition-transform"><i class="fa-solid fa-scroll"></i></div>
+                                        <div class="text-orange-700 mb-4 text-4xl"><i class="fa-solid fa-scroll"></i></div>
+                                        <h2 class="text-2xl font-bold mb-2 tracking-widest">練習する</h2>
+                                        <p class="text-stone-500 text-sm text-center font-sans">音声読み上げ付き<br>ランダム五問テスト</p>
+                                    </button>
+                                    
+                                    <button onclick="app.goTo('battleMenu')" class="bg-stone-800 text-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all border border-stone-900 flex flex-col items-center group relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 bg-red-700 text-white text-xs font-bold font-sans px-3 py-1 rounded-bl-lg">いざ勝負</div>
+                                        <div class="absolute -bottom-4 -right-4 text-7xl text-stone-700 opacity-50 group-hover:scale-110 transition-transform"><i class="fa-solid fa-fan"></i></div>
+                                        <div class="text-red-400 mb-4 text-4xl"><i class="fa-solid fa-fan"></i></div>
+                                        <h2 class="text-2xl font-bold mb-2 tracking-widest">対戦する</h2>
+                                        <p class="text-stone-300 text-sm text-center font-sans">CPU五段階レベル<br>＆ 二人対戦モード</p>
+                                    </button>
+                                </div>
+                            </main>
+                        </div>
+                    `;
+                },
+
+                // ① 覚えるモード（一括グリッド＆フリック）
+                learn() {
+                    const s = app.state.learn;
+                    const flipped = s.flippedCards;
+
+                    let cardsHTML = POEMS.map(poem => {
+                        const isMemorized = app.state.stats.memorized.includes(poem.id);
+                        const isFlipped = flipped.has(poem.id);
+
+                        return `
+                            <div class="karuta-card aspect-[2/3] relative cursor-pointer flex flex-col items-center justify-center p-2 text-center group" onclick="app.toggleLearnFlip(${poem.id})">
+                                ${isMemorized ? '<div class="absolute top-1 right-1 text-emerald-600 text-lg z-10"><i class="fa-solid fa-check-circle bg-white rounded-full"></i></div>' : ''}
+                                
+                                ${!isFlipped ? `
+                                    <p class="text-[10px] text-stone-400 font-sans absolute top-2 left-2 font-bold">${poem.id}</p>
+                                    <p class="vertical-rl font-serif text-sm sm:text-base lg:text-lg leading-[2] tracking-[0.2em] text-stone-800 animate-pop">
+                                        ${formatRuby(poem.kami)}
+                                    </p>
+                                ` : `
+                                    <div class="flex flex-col h-full w-full justify-between animate-pop">
+                                        <p class="vertical-rl font-serif text-sm sm:text-base lg:text-lg leading-[2] tracking-[0.2em] text-red-800 mx-auto mt-2">
+                                            ${formatRuby(poem.shimo)}
+                                        </p>
+                                        <button onclick="event.stopPropagation(); app.toggleMemorized(${poem.id})" class="mt-2 w-full py-2 ${isMemorized ? 'bg-stone-200 text-stone-500' : 'bg-emerald-600 text-white'} rounded text-xs font-bold shadow-sm active:scale-95 transition-colors">
+                                            ${isMemorized ? '外す' : '覚えた！'}
+                                        </button>
+                                    </div>
+                                `}
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="flex-1 tatami-bg p-3 sm:p-4 overflow-y-auto">
+                            <div class="max-w-6xl mx-auto">
+                                <div class="bg-white/90 backdrop-blur-sm p-3 rounded shadow-sm mb-4 flex justify-between items-center sticky top-0 z-20 border-l-4 border-stone-800">
+                                    <span class="font-bold text-stone-700 font-serif">全百首</span>
+                                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full"><i class="fa-solid fa-hand-pointer"></i> 札をタップして裏返す</span>
+                                </div>
+                                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 pb-10">
+                                    ${cardsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // ② 練習モード
+                practice() {
+                    const s = app.state.practice;
+                    if(s.isFinished) {
+                        return `
+                            <div class="flex-1 bg-stone-50 flex items-center justify-center p-6">
+                                <div class="max-w-md w-full text-center">
+                                    <i class="fa-solid fa-medal text-6xl text-yellow-500 mb-4 drop-shadow"></i>
+                                    <h2 class="text-3xl font-bold mb-2 font-serif tracking-widest">修練完了</h2>
+                                    <p class="text-xl mb-8 font-bold text-stone-700 font-sans mt-4">正解数: <span class="text-4xl text-orange-600">${s.score}</span> / ${s.questions.length}問</p>
+                                    <div class="flex gap-4 justify-center font-bold">
+                                        <button onclick="app.startPractice()" class="bg-stone-800 text-white px-8 py-3 rounded shadow hover:bg-stone-700">もう一度</button>
+                                        <button onclick="app.goTo('home')" class="bg-stone-300 text-stone-800 px-8 py-3 rounded shadow hover:bg-stone-400">ホーム</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+
+                    const q = s.questions[s.currentIndex];
+                    return `
+                        <div class="flex-1 wagara-bg flex flex-col p-4">
+                            <div class="flex justify-between text-stone-600 font-bold mb-4 px-2 font-serif tracking-widest">
+                                <span>第 ${s.currentIndex + 1} 問</span>
+                                <span>正解: ${s.score}</span>
+                            </div>
+                            
+                            <div class="bg-white p-6 md:p-10 rounded shadow-md text-center mb-6 relative min-h-[160px] flex flex-col justify-center border-t-4 border-stone-800">
+                                <button onclick="speakText('${getReadingText(q.kami)}')" class="absolute top-4 right-4 p-3 bg-stone-100 text-stone-600 rounded-full hover:bg-stone-200 shadow-sm transition-colors" title="もう一度聞く">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                                <p class="text-xs text-stone-400 mb-2 font-sans font-bold tracking-widest">上の句</p>
+                                <p class="text-2xl md:text-3xl font-serif text-stone-800 tracking-widest leading-[2]">
+                                    ${formatRuby(q.kami)}
+                                </p>
+                                
+                                ${s.selectedAnswer !== null ? `
+                                    <div class="absolute inset-0 flex items-center justify-center bg-white/95 backdrop-blur-sm z-10 animate-pop">
+                                        ${s.isCorrect ? `
+                                            <div class="text-red-600 text-center"><i class="fa-regular fa-circle text-8xl"></i><div class="text-2xl font-bold mt-2 font-serif tracking-widest">正解！</div></div>
+                                        ` : `
+                                            <div class="text-blue-600 text-center"><i class="fa-solid fa-xmark text-7xl"></i><div class="text-2xl font-bold mt-2 font-serif tracking-widest">残念...</div>
+                                            <div class="text-stone-800 mt-4 text-sm font-serif bg-stone-100 p-2 rounded">正解：${formatRuby(q.shimo)}</div></div>
+                                        `}
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                                ${q.options.map((opt, idx) => {
+                                    let btnClass = "bg-white border-2 border-stone-300 text-stone-800 p-4 md:p-6 rounded text-lg font-serif hover:border-stone-800 transition-all text-left shadow-sm flex items-center gap-4";
+                                    if(s.selectedAnswer !== null) {
+                                        if(opt === q.shimo) btnClass = "bg-red-50 border-2 border-red-600 text-red-800 p-4 md:p-6 rounded text-lg font-serif text-left shadow-sm flex items-center gap-4";
+                                        else if(opt === s.selectedAnswer && !s.isCorrect) btnClass = "bg-stone-200 border-2 border-stone-400 text-stone-500 p-4 md:p-6 rounded text-lg font-serif text-left opacity-50 flex items-center gap-4";
+                                        else btnClass = "bg-white border-2 border-stone-200 text-stone-400 p-4 md:p-6 rounded text-lg font-serif text-left opacity-50 flex items-center gap-4";
+                                    }
+                                    return `
+                                        <button onclick="app.actionPractice('${opt}')" ${s.selectedAnswer !== null ? 'disabled' : ''} class="${btnClass} active:scale-95">
+                                            <span class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-sm font-sans text-stone-500 flex-shrink-0">${idx+1}</span>
+                                            <span class="leading-relaxed tracking-widest">${formatRuby(opt)}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // ③ 対戦メニュー
+                battleMenu() {
+                    const cpuRecords = app.state.stats.cpuRecords;
+                    let cpuOptionsHTML = CPU_LEVELS.map(l => `
+                        <button onclick="app.startBattleCpu(${l.level})" class="w-full bg-stone-50 border border-stone-200 hover:border-red-500 hover:bg-red-50 p-3 rounded flex justify-between items-center group transition-colors">
+                            <span class="font-bold text-stone-700 group-hover:text-red-700 font-serif tracking-widest">Lv.${l.level} ${l.name}</span>
+                            <span class="text-xs text-stone-500 bg-white px-2 py-1 rounded shadow-sm font-sans font-bold">勝 ${cpuRecords[l.level].w} / 負 ${cpuRecords[l.level].l}</span>
+                        </button>
+                    `).join('');
+
+                    return `
+                        <div class="flex-1 wagara-bg p-6 overflow-y-auto">
+                            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-4">
+                                
+                                <!-- CPU戦 -->
+                                <div class="bg-white p-6 rounded shadow border-t-4 border-stone-800">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="bg-stone-800 text-white p-3 rounded"><i class="fa-solid fa-user-ninja text-xl"></i></div>
+                                        <h3 class="text-xl font-bold font-serif tracking-widest">CPU対戦</h3>
+                                    </div>
+                                    <p class="text-xs text-stone-500 mb-6 font-bold">難易度ごとに戦績が記録されます。</p>
+                                    <div class="space-y-3 mb-2">
+                                        ${cpuOptionsHTML}
+                                    </div>
+                                </div>
+
+                                <!-- 2人対戦 -->
+                                <div class="bg-white p-6 rounded shadow border-t-4 border-red-800 h-fit">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="bg-red-800 text-white p-3 rounded"><i class="fa-solid fa-user-group text-xl"></i></div>
+                                        <h3 class="text-xl font-bold font-serif tracking-widest">二人対戦</h3>
+                                    </div>
+                                    <p class="text-sm text-stone-600 mb-6 leading-relaxed">端末を机に置き、向かい合って対戦します。<br>両者お手つきで正解の札が光ります。</p>
+                                    <button onclick="app.startBattleLocal()" class="w-full bg-red-800 text-white py-4 rounded font-bold hover:bg-red-900 shadow transition-colors flex justify-center items-center gap-3 tracking-widest font-serif">
+                                        <i class="fa-solid fa-fan"></i> 対戦開始
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // ④ CPU対戦
+                battleCpu() {
+                    const s = app.state.battleCpu;
+                    if(s.gameState === 'finished') {
+                        const isWin = s.scoreP >= s.scoreC;
+                        return `
+                            <div class="flex-1 bg-stone-900 text-[#d1cfa9] flex flex-col items-center justify-center p-6 text-center">
+                                <i class="fa-solid fa-fan text-7xl ${isWin ? 'text-red-500' : 'text-stone-600'} mb-6"></i>
+                                <h2 class="text-4xl font-bold mb-8 font-serif tracking-widest">${isWin ? '見事、勝利！' : '無念、敗北...'}</h2>
+                                <div class="flex gap-16 text-2xl mb-12 font-serif font-bold">
+                                    <div><p class="text-stone-400 text-sm mb-2 font-sans">あなた</p><p class="text-white text-5xl">${s.scoreP}<span class="text-xl ml-1">枚</span></p></div>
+                                    <div><p class="text-stone-400 text-sm mb-2 font-sans">CPU (Lv.${s.level})</p><p class="text-red-500 text-5xl">${s.scoreC}<span class="text-xl ml-1">枚</span></p></div>
+                                </div>
+                                <div class="flex gap-4 font-bold font-sans">
+                                    <button onclick="app.startBattleCpu(${s.level})" class="bg-stone-700 text-white px-8 py-3 rounded shadow hover:bg-stone-600">再戦</button>
+                                    <button onclick="app.goTo('battleMenu')" class="bg-stone-300 text-stone-800 px-8 py-3 rounded shadow hover:bg-stone-400">退陣</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // 札の生成
+                    const boardHTML = s.board.map(card => {
+                        const hand = s.hands.find(h => h.cardId === card.id);
+                        let extraClass = "";
+                        let handHTML = "";
+                        if(hand) {
+                            // CPUなら上から(rotate-180)、プレイヤーなら下から手が伸びる
+                            const rotateClass = hand.player === 'cpu' ? 'rotate-180' : '';
+                            if(hand.isCorrect) {
+                                extraClass = "ring-4 ring-green-500 animate-vanish z-20";
+                                handHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <i class="fa-solid fa-hand text-5xl text-green-500 drop-shadow-lg ${rotateClass}"></i>
+                                            </div>`;
+                            } else {
+                                extraClass = "ring-4 ring-red-500 animate-shake z-10";
+                                handHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <i class="fa-solid fa-hand text-5xl text-red-500 drop-shadow-lg ${rotateClass}"></i>
+                                            </div>`;
+                            }
+                        }
+                        return `
+                            <button onclick="app.actionBattleCpu(${card.id})" ${s.gameState !== 'playing' ? 'disabled' : ''} class="karuta-card w-[4.5rem] h-[6.5rem] sm:w-24 sm:h-36 flex items-center justify-center p-1 sm:p-2 relative bg-white ${extraClass}">
+                                <p class="vertical-rl font-serif text-sm sm:text-lg text-stone-800 leading-loose tracking-[0.2em]">${formatRuby(card.shimo)}</p>
+                                ${handHTML}
+                            </button>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="flex-1 flex flex-col bg-stone-900 select-none">
+                            <div class="bg-stone-950 text-white p-3 flex justify-between items-center z-10 shadow-lg border-b border-stone-700">
+                                <button onclick="app.goTo('battleMenu')" class="text-stone-400 p-2 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                                <div class="font-bold flex gap-6 text-sm sm:text-base font-serif tracking-widest">
+                                    <span class="text-white">あなた: ${s.scoreP}</span><span class="text-red-500">CPU(Lv.${s.level}): ${s.scoreC}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-stone-800 p-4 text-center min-h-[100px] flex flex-col justify-center shadow-lg relative z-10">
+                                ${s.gameState === 'ready' ? 
+                                    `<button onclick="app.nextRoundCpu()" class="bg-red-800 text-white px-10 py-3 rounded font-bold font-serif tracking-widest text-lg animate-pulse mx-auto shadow-lg hover:bg-red-700">試合開始</button>` : 
+                                    `<div>
+                                        <p class="text-[10px] text-stone-400 mb-2 tracking-widest"><i class="fa-solid fa-volume-high"></i> 残り${s.deck.length + 1}首</p>
+                                        <p class="text-lg sm:text-2xl font-serif text-white tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</p>
+                                    </div>`
+                                }
+                            </div>
+                            <div class="bg-[#d1cfa9] text-stone-800 text-center py-1 font-bold shadow-inner text-xs tracking-widest font-serif border-y-2 border-stone-700">${s.message}</div>
+                            
+                            <div class="flex-1 tatami-bg p-2 sm:p-4 relative overflow-auto">
+                                <div class="max-w-4xl mx-auto flex flex-wrap justify-center content-start gap-2 sm:gap-4 h-full pt-4 pb-12">
+                                    ${boardHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                // ⑤ ローカル2人対戦
+                battleLocal() {
+                    const s = app.state.battleLocal;
+                    if(s.gameState === 'finished') {
+                        const winner = s.scoreP1 > s.scoreP2 ? '下側の勝利' : s.scoreP1 < s.scoreP2 ? '上側の勝利' : '引き分け';
+                        return `
+                            <div class="flex-1 bg-stone-900 text-[#d1cfa9] flex flex-col items-center justify-center p-6 text-center">
+                                <i class="fa-solid fa-fan text-7xl text-red-500 mb-6"></i>
+                                <h2 class="text-4xl font-bold mb-8 font-serif tracking-widest">${winner}！</h2>
+                                <div class="flex gap-16 text-2xl mb-12 font-serif font-bold">
+                                    <div><p class="text-stone-400 text-sm mb-2 font-sans">下側 (P1)</p><p class="text-white text-5xl">${s.scoreP1}<span class="text-xl ml-1">枚</span></p></div>
+                                    <div><p class="text-stone-400 text-sm mb-2 font-sans">上側 (P2)</p><p class="text-white text-5xl">${s.scoreP2}<span class="text-xl ml-1">枚</span></p></div>
+                                </div>
+                                <div class="flex gap-4 font-bold font-sans">
+                                    <button onclick="app.startBattleLocal()" class="bg-stone-700 text-white px-8 py-3 rounded shadow hover:bg-stone-600">再戦</button>
+                                    <button onclick="app.goTo('battleMenu')" class="bg-stone-300 text-stone-800 px-8 py-3 rounded shadow hover:bg-stone-400">退陣</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const renderPlayerArea = (pNum) => {
+                        return s.board.map(card => {
+                            const isHighlight = s.highlightId === card.id;
+                            const hand = s.hands.find(h => h.cardId === card.id && h.player === `p${pNum}`);
+                            
+                            let extraClass = isHighlight ? "ring-4 ring-yellow-400 animate-pulse z-20" : "";
+                            let handHTML = "";
+                            
+                            if(hand) {
+                                // 各プレイヤー側から手が伸びるように見える（P2のコンテナは既に回転済みなので指は上のままでOK）
+                                if(hand.isCorrect) {
+                                    extraClass += " ring-4 ring-green-500 animate-vanish z-30";
+                                    handHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <i class="fa-solid fa-hand text-4xl sm:text-5xl text-green-500 drop-shadow-lg"></i>
+                                                </div>`;
+                                } else {
+                                    extraClass += " ring-4 ring-red-500 animate-shake z-30";
+                                    handHTML = `<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <i class="fa-solid fa-hand text-4xl sm:text-5xl text-red-500 drop-shadow-lg"></i>
+                                                </div>`;
+                                }
+                            }
+
+                            return `
+                                <button onclick="app.actionBattleLocal(${pNum}, ${card.id})" ${s.gameState !== 'playing' ? 'disabled' : ''} 
+                                    class="karuta-card w-[4rem] h-[6rem] sm:w-20 sm:h-32 flex items-center justify-center p-1 relative bg-white ${extraClass}">
+                                    <p class="vertical-rl font-serif text-[13px] sm:text-base text-stone-800 leading-loose tracking-[0.2em]">${formatRuby(card.shimo)}</p>
+                                    ${handHTML}
+                                </button>
+                            `;
+                        }).join('');
+                    };
+
+                    return `
+                        <div class="h-full flex flex-col font-serif select-none bg-stone-900 overflow-hidden">
+                            <!-- Player 2 (上・逆さ) -->
+                            <div class="flex-1 tatami-bg p-2 relative flex flex-wrap justify-center content-center gap-1 sm:gap-2 shadow-inner rotate-180 overflow-hidden">
+                                <div class="absolute top-2 right-4 text-stone-600 font-bold bg-white/80 px-3 py-1 rounded shadow-sm z-10 font-sans text-xs tracking-widest border border-stone-300">P2: ${s.scoreP2} 枚</div>
+                                ${renderPlayerArea(2)}
+                            </div>
+
+                            <!-- 中央コントローラー -->
+                            <div class="h-28 sm:h-36 bg-stone-950 border-y-4 border-stone-700 flex flex-col items-center justify-center text-white relative z-20 shadow-2xl px-4">
+                                <button onclick="app.goTo('battleMenu')" class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white p-2">
+                                    <i class="fa-solid fa-xmark text-2xl"></i>
+                                </button>
+                                <div class="text-center w-full max-w-lg">
+                                    ${s.gameState === 'ready' ? 
+                                        `<button onclick="app.nextRoundLocal()" class="bg-red-800 text-white px-10 py-3 rounded font-bold font-serif text-xl tracking-widest animate-pulse shadow-lg">試合開始</button>` :
+                                        `<p class="text-stone-400 text-[10px] sm:text-xs font-sans font-bold mb-2 tracking-widest">${s.message}</p>
+                                         <div class="text-lg sm:text-2xl tracking-widest leading-relaxed">${formatRuby(s.currentPoem?.kami)}</div>`
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Player 1 (下) -->
+                            <div class="flex-1 tatami-bg p-2 relative flex flex-wrap justify-center content-center gap-1 sm:gap-2 shadow-inner overflow-hidden">
+                                <div class="absolute top-2 right-4 text-stone-600 font-bold bg-white/80 px-3 py-1 rounded shadow-sm z-10 font-sans text-xs tracking-widest border border-stone-300">P1: ${s.scoreP1} 枚</div>
+                                ${renderPlayerArea(1)}
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ==========================================
+            // アクション・ロジック
+            // ==========================================
+            
+            // 覚えるモード
+            startLearn() {
+                this.state.learn = { flippedCards: new Set() };
+                this.goTo('learn');
+            },
+            toggleLearnFlip(id) {
+                if(this.state.learn.flippedCards.has(id)) {
+                    this.state.learn.flippedCards.delete(id);
+                } else {
+                    this.state.learn.flippedCards.add(id);
+                }
+                this.render();
+            },
+            toggleMemorized(id) {
+                const s = this.state.stats;
+                if(s.memorized.includes(id)) {
+                    s.memorized = s.memorized.filter(i => i !== id);
+                } else {
+                    s.memorized.push(id);
+                }
+                this.saveStats();
+                // 裏返っている状態を解除して元に戻す
+                this.state.learn.flippedCards.delete(id);
+                this.render();
+            },
+
+            // 練習モード
+            startPractice() {
+                const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 5);
+                const qs = selected.map(poem => {
+                    const wrong = POEMS.filter(p => p.id !== poem.id).sort(() => 0.5 - Math.random()).slice(0, 3).map(p => p.shimo);
+                    const options = [poem.shimo, ...wrong].sort(() => 0.5 - Math.random());
+                    return { ...poem, options };
+                });
+                
+                this.state.practice = { questions: qs, currentIndex: 0, score: 0, selectedAnswer: null, isCorrect: null, isFinished: false };
+                this.goTo('practice');
+                setTimeout(() => speakText(qs[0].kami), 500);
+            },
+            actionPractice(option) {
+                const s = this.state.practice;
+                if(s.selectedAnswer !== null) return;
+                
+                window.speechSynthesis.cancel();
+                s.selectedAnswer = option;
+                s.isCorrect = (option === s.questions[s.currentIndex].shimo);
+                if(s.isCorrect) s.score++;
+
+                // ★正解の下の句を読み上げる
+                speakText(s.questions[s.currentIndex].shimo);
+                this.render();
+
+                setTimeout(() => {
+                    if(s.currentIndex + 1 < s.questions.length) {
+                        s.currentIndex++;
+                        s.selectedAnswer = null;
+                        s.isCorrect = null;
+                        this.render();
+                        speakText(s.questions[s.currentIndex].kami);
+                    } else {
+                        s.isFinished = true;
+                        this.state.stats.practiceScores += s.score;
+                        this.state.stats.playCount++;
+                        this.saveStats();
+                        this.render();
+                    }
+                }, 2000);
+            },
+
+            // CPU対戦モード
+            startBattleCpu(level) {
+                const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
+                // プロトタイプ時は全札ではなく、20首など限定した方が画面に収まりやすいですが、今回はご要望通り全札（またはデッキ分）とします。
+                // さすがに100首並べるとスマホでは辛いので、ランダムに20首を抽出して対戦する仕様にします。（実際のカルタ競技も自陣・敵陣で50首）
+                const matchDeck = shuffled.slice(0, 20);
+                this.state.battleCpu = { gameState: 'ready', level: level, deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP: 0, scoreC: 0, message: '開始ボタンを押してください', hands: [] };
+                this.goTo('battleCpu');
+            },
+            nextRoundCpu() {
+                const s = this.state.battleCpu;
+                if(s.deck.length === 0) {
+                    s.gameState = 'finished';
+                    if(s.scoreP >= s.scoreC) this.state.stats.cpuRecords[s.level].w++;
+                    else this.state.stats.cpuRecords[s.level].l++;
+                    this.saveStats();
+                    this.render();
+                    return;
+                }
+                s.hands = [];
+                s.currentPoem = s.deck.shift();
+                s.gameState = 'playing';
+                s.message = '詠み上げ中...';
+                this.render();
+                speakText(s.currentPoem.kami);
+
+                const levelData = CPU_LEVELS.find(l => l.level === s.level);
+                const reactionTime = Math.floor(Math.random() * (levelData.speedMax - levelData.speedMin)) + levelData.speedMin;
+                
+                this.cpuTimer = setTimeout(() => {
+                    this.actionCpuTakes();
+                }, reactionTime);
+            },
+            actionBattleCpu(cardId) {
+                const s = this.state.battleCpu;
+                if(s.gameState !== 'playing') return;
+                
+                const isCorrect = cardId === s.currentPoem.id;
+                s.hands.push({ cardId: cardId, isCorrect: isCorrect, player: 'p1' });
+
+                if(isCorrect) {
+                    clearTimeout(this.cpuTimer);
+                    window.speechSynthesis.cancel();
+                    s.scoreP++;
+                    s.message = '見事！あなたが取りました。';
+                    s.gameState = 'round_end';
+                    this.render(); // ここで緑枠＆vanishアニメーション発動
+                    
+                    setTimeout(() => {
+                        s.board = s.board.filter(c => c.id !== cardId);
+                        this.nextRoundCpu();
+                    }, 1000); // 手が見える時間を確保
+                } else {
+                    s.message = 'お手つき！CPUの動きを待ちます...';
+                    this.render(); // ここで赤枠＆shakeアニメーション発動
+                    
+                    setTimeout(() => {
+                        // 赤い手アイコンと枠を消す
+                        s.hands = s.hands.filter(h => h.cardId !== cardId);
+                        this.render();
+                    }, 500);
+                }
+            },
+            actionCpuTakes() {
+                const s = this.state.battleCpu;
+                window.speechSynthesis.cancel();
+                s.scoreC++;
+                s.message = 'CPUに取られました！';
+                s.gameState = 'round_end';
+                s.hands.push({ cardId: s.currentPoem.id, isCorrect: true, player: 'cpu' });
+                this.render();
+
+                setTimeout(() => {
+                    s.board = s.board.filter(c => c.id !== s.currentPoem.id);
+                    this.nextRoundCpu();
+                }, 1000);
+            },
+
+            // 2人対戦（ローカル）モード
+            startBattleLocal() {
+                const shuffled = [...POEMS].sort(() => 0.5 - Math.random());
+                const matchDeck = shuffled.slice(0, 20); // 画面サイズの都合上、20枚で勝負
+                this.state.battleLocal = { gameState: 'ready', deck: matchDeck, board: [...matchDeck], currentPoem: null, scoreP1: 0, scoreP2: 0, message: '中央の開始ボタンを押してください', hands: [], p1Missed: false, p2Missed: false, highlightId: null };
+                this.goTo('battleLocal');
+            },
+            nextRoundLocal() {
+                const s = this.state.battleLocal;
+                if(s.deck.length === 0) {
+                    s.gameState = 'finished';
+                    this.render();
+                    return;
+                }
+                s.hands = [];
+                s.p1Missed = false;
+                s.p2Missed = false;
+                s.highlightId = null;
+                s.currentPoem = s.deck.shift();
+                s.gameState = 'playing';
+                s.message = '詠み上げ中...';
+                this.render();
+                speakText(s.currentPoem.kami);
+            },
+            actionBattleLocal(pNum, cardId) {
+                const s = this.state.battleLocal;
+                if(s.gameState !== 'playing') return;
+                if((pNum === 1 && s.p1Missed) || (pNum === 2 && s.p2Missed)) return;
+
+                const isCorrect = cardId === s.currentPoem.id;
+                s.hands.push({ cardId: cardId, isCorrect: isCorrect, player: `p${pNum}` });
+
+                if(isCorrect) {
+                    window.speechSynthesis.cancel();
+                    if(pNum === 1) { s.scoreP1++; s.message = "P1 (下側) が取りました！"; }
+                    else { s.scoreP2++; s.message = "P2 (上側) が取りました！"; }
+                    
+                    s.gameState = 'round_end';
+                    this.render();
+                    setTimeout(() => {
+                        s.board = s.board.filter(c => c.id !== cardId);
+                        this.nextRoundLocal();
+                    }, 1000);
+
+                } else {
+                    if(pNum === 1) s.p1Missed = true;
+                    if(pNum === 2) s.p2Missed = true;
+                    s.message = `Player ${pNum} がお手つき！`;
+                    this.render();
+
+                    setTimeout(() => {
+                        s.hands = s.hands.filter(h => !(h.cardId === cardId && h.player === `p${pNum}`));
+                        
+                        if(s.p1Missed && s.p2Missed) {
+                            window.speechSynthesis.cancel();
+                            s.gameState = 'round_end';
+                            s.message = "両者お手つき！正解はこちらです。";
+                            s.highlightId = s.currentPoem.id;
+                            this.render();
+                            setTimeout(() => {
+                                s.board = s.board.filter(c => c.id !== s.currentPoem.id);
+                                this.nextRoundLocal();
+                            }, 3000);
+                        } else {
+                            this.render();
+                        }
+                    }, 500);
+                }
+            }
+        };
+
+        // アプリ起動
+        window.onload = () => { app.init(); };
+
+    </script>
+</body>
+</html>
